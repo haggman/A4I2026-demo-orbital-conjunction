@@ -1,0 +1,5 @@
+# ADK itself is installed by `adk deploy cloud_run` at the version deploy.sh pins.
+google-cloud-aiplatform[agent_engines]>=1.112,<2   # the sandbox client; google-adk pins it below 2
+google-cloud-bigquery>=3.40
+mcp>=1.24,<2                                        # ADK's MCP client; not in google-adk's base install
+sgp4==2.27                                          # zipped into the sandbox as pure Python; MIT
