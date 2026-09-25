@@ -35,7 +35,7 @@ bold() { printf '\033[1m%s\033[0m\n' "$*"; }
 fail() { printf '\n\033[1mERROR:\033[0m %s\n\n' "$*" >&2; exit 1; }
 
 [[ -f "${ENV_FILE}" ]] || fail "${ENV_FILE} not found. Run: python agent/setup_sandbox.py"
-command -v adk >/dev/null 2>&1 || fail "'adk' not found. In Cloud Shell: pip install google-adk==${ADK_VERSION}"
+command -v adk >/dev/null 2>&1 || fail "'adk' not found. Run: source scripts/activate.sh"
 
 set -a
 # shellcheck disable=SC1090
@@ -59,8 +59,10 @@ for role in roles/bigquery.dataViewer roles/bigquery.jobUser roles/mcp.toolUser 
 done
 
 bold "2/3  Deploying ${SERVICE} (ADK ${ADK_VERSION}) to ${REGION}"
-ENV_VARS="GOOGLE_CLOUD_PROJECT=${PROJECT},GOOGLE_GENAI_USE_VERTEXAI=True,A4I_SANDBOX=${A4I_SANDBOX}"
-ENV_VARS+=",A4I_CODE_PATH=${A4I_CODE_PATH:-tool},A4I_THINKING_LEVEL=${A4I_THINKING_LEVEL:-low}"
+# Cloud Run cannot see demo.env, so its settings (model, thinking, tier, timeouts, dataset...) go as variables.
+SETTINGS="$(python agent/cymbal_ops/config.py --deploy-env)" || fail "Could not read the settings (demo.env)."
+ENV_VARS="GOOGLE_CLOUD_PROJECT=${PROJECT},GOOGLE_GENAI_USE_VERTEXAI=True,A4I_SANDBOX=${A4I_SANDBOX},${SETTINGS}"
+echo "  settings: ${SETTINGS}"
 adk deploy cloud_run --project "${PROJECT}" --region "${REGION}" --service_name "${SERVICE}" \
   --adk_version "${ADK_VERSION}" --with_ui agent/cymbal_ops \
   -- --service-account "${SA}" --set-env-vars "${ENV_VARS}" --no-allow-unauthenticated \

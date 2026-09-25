@@ -49,23 +49,41 @@ agent/
     prompt.py                 the instructions—including the honesty rules
     tools.py                  assess_conjunction, run_in_sandbox, maneuver_cost, build_assessment
     sandbox.py                staging files into the sandbox
-    config.py                 every setting, with its reason
+    config.py                 every setting, with its reason (values come from demo.env)
+    timing.py                 one [timing] line per step, in the logs
     sandbox_files/orbit_whatif.py   the physics that runs in the sandbox
     requirements.txt
   setup_sandbox.py            create or reuse the sandbox, warm it, write cymbal_ops/.env
   smoke_test.py               ask the agent operator questions, headless; one diagnostic block
+  model_check.py              time the candidate Gemini models right now; say which to use
   deploy.sh                   Cloud Run, with its own service account and authentication required
 ```
 
 ## Run it
 
-The whole build is one command from the repo root in Cloud Shell—see `scripts/build_demo.sh`. By hand:
+The whole build is one command from the repo root in Cloud Shell: `bash scripts/build_demo.sh`. After that, in
+any new terminal:
 
 ```bash
-python3 -m venv ~/.venvs/a4i-demo && source ~/.venvs/a4i-demo/bin/activate
-pip install "google-adk[mcp]==2.7.0" -r agent/cymbal_ops/requirements.txt
-python agent/setup_sandbox.py          # needs the a4i_orbit tables: run the notebook or scripts/load.sh first
-python agent/smoke_test.py --quick
-adk web agent                          # then Web Preview on port 8000
-bash agent/deploy.sh                   # Cloud Run
+source scripts/activate.sh             # makes or updates the Python environment, switches it on, shows the settings
+python agent/smoke_test.py --quick     # ask the agent two operator questions; one diagnostic block
+python agent/model_check.py            # which Gemini model answers quickly right now
+adk web agent                          # the ADK web UI: Web Preview > Change port > 8000
+bash agent/deploy.sh                   # Cloud Run, with the settings from demo.env
 ```
+
+## Settings: demo.env
+
+Everything you might change lives in `demo.env` at the repo root: the model (`A4I_MODEL`) and where it is served
+from, the thinking level, the service tier, how patient to be with a slow model, the dataset, and the code path.
+Edit it and restart what is running; `agent/deploy.sh` copies the values to Cloud Run. A variable exported in your
+shell wins over the file. `agent/cymbal_ops/.env` is different: `setup_sandbox.py` writes the sandbox's name
+there, and you should not need to touch it.
+
+## When Gemini is slow
+
+On 2026-09-25 the same request took 2 s one minute and 42 s the next, with nothing wrong in the agent. So every
+model call has a time limit (`A4I_MODEL_TIMEOUT_S`, doubling on each retry), an exponential pause between tries
+(1, 2, 4, then 8 s at most), and a cap on tries (`A4I_MODEL_ATTEMPTS`). Busy answers (HTTP 429 and 5xx) get the
+same backoff inside the client. Before a session, `python agent/model_check.py` times the candidates
+(`A4I_MODEL_CANDIDATES`, or name them) and tells you what to put in `demo.env`.

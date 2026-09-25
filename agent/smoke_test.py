@@ -120,7 +120,7 @@ def main():
     t0 = time.perf_counter()
     turns, state = asyncio.run(run(qs))
     from cymbal_ops import config
-    from cymbal_ops.agent import EMPTY_REPLIES
+    from cymbal_ops.agent import RETRIES
     calls = [c for t in turns for c in t["tool_calls"]]
     checks = {
         "managed BigQuery MCP server answered": bool(MCP_TOOLS & set(calls)),
@@ -137,10 +137,10 @@ def main():
             for p in ("google-adk", "google-genai", "google-cloud-aiplatform", "google-cloud-bigquery", "sgp4")}
     block = {"python": sys.version.split()[0], "platform": platform.platform(), "versions": vers,
              "project": os.environ.get("GOOGLE_CLOUD_PROJECT"), "sandbox": os.environ.get("A4I_SANDBOX"),
-             "model": f"{config.MODEL} @ {config.MODEL_LOCATION}, thinking {config.THINKING_LEVEL}",
+             "settings": config.summary(),
              "code_path": config.CODE_PATH,
              "total_s": round(time.perf_counter() - t0, 1),
-             "empty_model_replies_retried": EMPTY_REPLIES,
+             "model_retries": RETRIES,
              "checks": {k: ("PASS" if v else "FAIL") for k, v in checks.items()},
              "assessment": (state.get("assessment") or {}).get("markdown"), "turns": turns}
     print("\n===== A4I DEMO AGENT — SMOKE TEST DIAGNOSTIC BLOCK =====")

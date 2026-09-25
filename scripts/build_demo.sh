@@ -21,7 +21,7 @@
 set -euo pipefail
 
 ADK_VERSION="${ADK_VERSION:-2.7.0}"
-VENV="${HOME}/.venvs/a4i-demo"
+VENV="${A4I_VENV:-${HOME}/.venvs/a4i-demo}"
 DATASET="a4i_orbit"
 SKIP_DEPLOY=0
 SMOKE_ARGS=(--quick)
@@ -58,12 +58,8 @@ else
 fi
 
 bold "3/6  Python environment (${VENV}, ADK ${ADK_VERSION})"
-[[ -d "${VENV}" ]] || python3 -m venv "${VENV}"
 # shellcheck disable=SC1091
-source "${VENV}/bin/activate"
-pip install -q --upgrade pip
-pip install -q "google-adk[mcp]==${ADK_VERSION}" -r agent/cymbal_ops/requirements.txt
-python -c "import importlib.metadata as m; print('  google-adk', m.version('google-adk'), '· aiplatform', m.version('google-cloud-aiplatform'), '· mcp', m.version('mcp'))"
+source scripts/activate.sh || fail "The Python environment could not be set up - see the message above."
 
 bold "4/6  Agent Runtime code sandbox (the first one can take three minutes)"
 python agent/setup_sandbox.py --project "${PROJECT}"
@@ -81,11 +77,12 @@ fi
 bold "Ready."
 cat <<EOF
 
-  Try it locally, with the ADK web UI:
-    source ${VENV}/bin/activate && adk web agent
-    then Web Preview > Preview on port 8000, and pick cymbal_ops.
+  In any new Cloud Shell terminal, start with:
+    source scripts/activate.sh
 
-  Before a session, reset to the start state with:
-    source ${VENV}/bin/activate && python agent/setup_sandbox.py
+  Then:
+    adk web agent                      the ADK web UI (Web Preview > Change port > 8000), pick cymbal_ops
+    python agent/model_check.py        which Gemini model is quick right now (settings live in demo.env)
+    python agent/setup_sandbox.py      before a session: reset the sandbox to the start state
 
 EOF
