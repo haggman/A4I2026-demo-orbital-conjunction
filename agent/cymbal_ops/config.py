@@ -16,6 +16,15 @@ SANDBOX = os.environ.get("A4I_SANDBOX", "")
 MODEL = os.environ.get("A4I_MODEL", "gemini-3.8-flash")
 MODEL_LOCATION = os.environ.get("A4I_MODEL_LOCATION", "global")
 
+# How hard the model thinks before each step: minimal, low, medium or high. A turn here is several steps
+# (query, tool, code, answer), and on a stage every step's thinking is dead air. "low" was enough for this
+# agent's routing; set A4I_THINKING_LEVEL=high if answers get sloppy.
+THINKING_LEVEL = os.environ.get("A4I_THINKING_LEVEL", "low")
+
+# If the model comes back with nothing to say (no text, no tool call, no code), ask it once more before giving
+# up. See agent.py for why that happens after a code block, and how we steer around it.
+EMPTY_REPLY_RETRIES = int(os.environ.get("A4I_EMPTY_REPLY_RETRIES", "1"))
+
 # The demo's frozen "now"—the same instant notebooks/demo_01_load_explore.ipynb screens from.
 NOW_UTC = os.environ.get("A4I_NOW_UTC", "2026-09-25T01:00:00Z")
 

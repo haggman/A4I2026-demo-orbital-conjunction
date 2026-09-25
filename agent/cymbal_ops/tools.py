@@ -9,6 +9,7 @@
 """
 import json
 import math
+from concurrent.futures import ThreadPoolExecutor
 from functools import lru_cache
 
 from google.adk.tools import ToolContext
@@ -30,7 +31,19 @@ def _bq():
 def _rows(sql: str, **params) -> list[dict]:
     typ = lambda v: "INT64" if isinstance(v, int) else "FLOAT64" if isinstance(v, float) else "STRING"
     cfg = bigquery.QueryJobConfig(query_parameters=[bigquery.ScalarQueryParameter(k, typ(v), v) for k, v in params.items()])
-    return [dict(r) for r in _bq().query(sql.replace("{D}", f"`{config.PROJECT}.{config.DATASET}`"), job_config=cfg).result()]
+    # query_and_wait: small queries come straight back, without the create-a-job-then-poll round trips.
+    return [dict(r) for r in _bq().query_and_wait(sql.replace("{D}", f"`{config.PROJECT}.{config.DATASET}`"), job_config=cfg)]
+
+
+@lru_cache(maxsize=1)
+def _fleet() -> dict:
+    """Our twelve satellites never change during a demo: read them once."""
+    return {r["OBJECT_NAME"]: r for r in _rows("SELECT * FROM {D}.fleet")}
+
+
+@lru_cache(maxsize=1)
+def _info() -> dict:
+    return _rows("SELECT * FROM {D}.snapshot_info")[0]
 
 
 def _plain(v):
@@ -42,14 +55,16 @@ def _plain(v):
 
 
 def _facts(fleet_sat: str, norad_cat_id: int) -> dict | None:
-    ev = _rows("SELECT * FROM {D}.conjunctions WHERE fleet_sat = @f AND norad_cat_id = @n ORDER BY miss_m LIMIT 1",
-               f=fleet_sat, n=int(norad_cat_id))
-    if not ev:
+    n = int(norad_cat_id)
+    with ThreadPoolExecutor(max_workers=3) as pool:        # three small queries at once, not one after another
+        ev = pool.submit(_rows, "SELECT * FROM {D}.conjunctions WHERE fleet_sat = @f AND norad_cat_id = @n "
+                                "ORDER BY miss_m LIMIT 1", f=fleet_sat, n=n)
+        obj = pool.submit(_rows, "SELECT * FROM {D}.catalog WHERE NORAD_CAT_ID = @n", n=n)
+        sc = pool.submit(_rows, "SELECT OWNER, LAUNCH_DATE, OPS_STATUS_CODE, RCS_M2 FROM {D}.satcat WHERE NORAD_CAT_ID = @n", n=n)
+        ev, obj, sc = ev.result(), obj.result(), sc.result()
+    if not ev or not obj or fleet_sat not in _fleet():
         return None
-    obj = _rows("SELECT * FROM {D}.catalog WHERE NORAD_CAT_ID = @n", n=int(norad_cat_id))[0]
-    sat = _rows("SELECT * FROM {D}.fleet WHERE OBJECT_NAME = @f", f=fleet_sat)[0]
-    sc = _rows("SELECT OWNER, LAUNCH_DATE, OPS_STATUS_CODE, RCS_M2 FROM {D}.satcat WHERE NORAD_CAT_ID = @n", n=int(norad_cat_id))
-    info = _rows("SELECT * FROM {D}.snapshot_info")[0]
+    obj, sat, info = obj[0], _fleet()[fleet_sat], _info()
     return {"event": {k: _plain(v) for k, v in ev[0].items()}, "object": obj, "fleet": sat,
             "satcat": {k: _plain(v) for k, v in (sc[0] if sc else {}).items()}, "info": info}
 
@@ -61,8 +76,8 @@ def _miss_needed(hbr_m: float) -> float:
 def assess_conjunction(fleet_sat: str, norad_cat_id: int, tool_context: ToolContext) -> dict:
     """Everything known about one close approach between a Cymbal Orbital satellite and a catalogued object.
 
-    Call this before discussing any specific approach, and ALWAYS before writing what-if code: it stages the
-    case file that orbit_whatif reads in the sandbox.
+    Call this when the operator asks about one specific approach, and ALWAYS before writing what-if code: it
+    stages the case file that orbit_whatif reads in the sandbox. For an overview, query the conjunctions table.
 
     Args:
         fleet_sat: our satellite's name, e.g. "CYMBAL-04".

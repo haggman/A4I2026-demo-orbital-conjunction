@@ -16,7 +16,7 @@ It is one ADK agent with three kinds of tool, plus a sandbox:
 The model is **Gemini 3.8 Flash on the global endpoint**. The agent itself runs on Cloud Run; its sandbox
 belongs to an Agent Runtime instance either way.
 
-## The sandbox, and three things we learned about it
+## The sandbox, and four things we learned about it
 
 - **It has numpy and scipy but no `sgp4`, no network, and no `pip`.** So `assess_conjunction` uploads
   `sgp4`'s own pure-Python modules (MIT-licensed) as a small zip, with our `orbit_whatif.py` beside it,
@@ -26,6 +26,11 @@ belongs to an Agent Runtime instance either way.
 - **Pure-Python SGP4 runs at about 32 µs a step there, and each call has 300 seconds.** Screening the whole
   sky does not fit, and is not the sandbox's job: the notebook does that. The sandbox does the per-event
   physics an operator asks about.
+- **In ADK 2.7.0, a turn that runs code can end the moment the code finishes.** The code executor blanks the
+  model's reply so the flow will go back to the model with the output, but a later check reads the blank reply
+  as "the model said nothing" (`MODEL_RETURNED_NO_CONTENT`) and ends the turn. The code runs; the operator hears
+  nothing. `agent.py` wraps Gemini to pass code-bearing replies on without their finish reason, which lets the
+  flow loop back as intended, and asks the model once more if a reply ever comes back empty.
 
 How a burn is modelled, in `sandbox_files/orbit_whatif.py`: SGP4 stays the baseline for both objects, and we
 integrate only the *difference* the burn makes (two-body + J2, once with the burn and once without). What the
