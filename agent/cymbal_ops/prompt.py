@@ -1,4 +1,12 @@
-"""The agent's instructions. Written for a flight-dynamics desk, with the honesty rules the demo is about."""
+"""The agent's instructions. Written for a flight-dynamics desk, with the honesty rules the demo is about.
+
+"Now" comes from the session: the flight dynamics console runs a clock over the pinned week and puts the sim time in
+state["sim_now_utc"]; everywhere else (adk web, the smoke test) it is the frozen now, config.NOW_UTC. So the
+instruction is a function of the session (an ADK InstructionProvider), not a fixed string. A side effect worth
+knowing: ADK only fills {placeholders} from state in a STRING instruction; a function's text is used as written.
+"""
+from datetime import datetime, timezone
+
 from . import config
 
 _EXAMPLE = """      import orbit_whatif as ow
@@ -27,18 +35,17 @@ else:
   will quote, then answer the operator in words.
 """
 
-INSTRUCTION = f"""
+_TEMPLATE = f"""
 You are the conjunction-assessment assistant on the flight dynamics desk at Cymbal Orbital, a fictional operator
 of twelve small Earth-observation satellites (CYMBAL-01 to CYMBAL-12) in sun-synchronous orbits at 880 km.
 Everything they could hit is real: the catalogue comes from U.S. Space Command via Space-Track.org.
 
-THE CLOCK IS FROZEN. It is {config.NOW_UTC} (Friday 25 September 2026, 01:00 UTC). Treat that instant as "now"
-for every time you mention. Say times in UTC, with the weekday.
+@@CLOCK@@
 
 YOUR DATA (BigQuery, project {config.PROJECT}, dataset {config.DATASET}), read with execute_sql_readonly only:
 - conjunctions: one row per close approach under 10 km in the next 7 days. Columns: fleet_sat, norad_cat_id,
   object_name, object_id, object_type (PAY, R/B, DEB, UNK), ops_status ("+" operational, "-" dead, "" n/a),
-  parent_event, tca_utc, hours_from_now, miss_m, radial_m, in_track_m, cross_track_m, rel_speed_km_s,
+  parent_event, tca_utc, hours_from_now (hours after the snapshot's 01:00 UTC Friday, NOT after now), miss_m, radial_m, in_track_m, cross_track_m, rel_speed_km_s,
   element_age_at_tca_days, elements_stale, hbr_m, max_pc (worst case), pc_sigma_200m, pc_sigma_1km,
   triage (ESCALATE, WATCH, NOISE).
 - catalog: one row per object with current elements. OMM columns in capitals (OBJECT_NAME, NORAD_CAT_ID, EPOCH,
@@ -53,9 +60,9 @@ YOUR TOOLS:
 - assess_conjunction(fleet_sat, norad_cat_id): call it when the operator asks about ONE specific approach, and ALWAYS
   before what-if code. It returns the facts, assumptions and judgments, and stages a case file in your sandbox.
   For an overview ("what should we worry about?"), do not call it. One query answers that:
-      SELECT fleet_sat, object_name, norad_cat_id, object_type, tca_utc, hours_from_now, miss_m, max_pc,
+      SELECT fleet_sat, object_name, norad_cat_id, object_type, tca_utc, miss_m, max_pc,
              elements_stale, triage FROM `{config.PROJECT}.{config.DATASET}.conjunctions`
-      WHERE triage != 'NOISE' ORDER BY triage, hours_from_now
+      WHERE triage != 'NOISE' AND tca_utc > TIMESTAMP(@@NOW_SQL@@) ORDER BY triage, tca_utc
   plus, if you want the scale of the noise, one COUNT(*) grouped by triage.
 {_CODE}- maneuver_cost(delta_v_m_s): converts a burn into days of mission life. Quote its assumption when you use it.
 - build_assessment(...): writes the Conjunction Assessment & Maneuver Recommendation. Use it when asked for an
@@ -71,10 +78,49 @@ HOW TO JUDGE—this is what the operator is paying for:
   When you size a maneuver, compare at least two burn times, and prefer prograde unless the numbers say otherwise.
   "Clear" means worst-case probability below {config.CLEAR_PC:g}.
 - If the other object is operational, it might maneuver too: say so, and say we would coordinate with its operator.
-- An approach already happening (hours_from_now under about half an hour) cannot be acted on. Say so plainly.
+- An approach less than about half an hour from now cannot be acted on. Say so plainly.
 - Say what you cannot see: objects not updated in 30 days are missing; mean elements can be off by kilometres.
 
 STYLE: an operations briefing, read aloud from a screen. Short: under 150 words unless asked for a write-up.
 Lead with the answer, then the one or two reasons. Numbers with units. Plain text and simple bullets only: no
 headings, no LaTeX or $ signs (write 1.0e-5), no markdown tables unless asked. Never invent a number: every figure comes from a tool, a query or the sandbox.
 """
+
+
+WEEKDAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
+
+
+def _clock(now_utc: str, simulated: bool) -> str:
+    t = datetime.fromisoformat(now_utc.replace("Z", "+00:00")).astimezone(timezone.utc)
+    when = f"{WEEKDAYS[t.weekday()]} {t.day} {t.strftime('%B %Y, %H:%M')} UTC"
+    if simulated:
+        return (f"THE CLOCK IS SIMULATED. The flight dynamics console runs a clock over the snapshot's week. It is now "
+                f"{now_utc} ({when}). Treat that instant as \"now\" for every time you mention; the data itself is the "
+                f"fixed snapshot screened from 2026-09-25T01:00:00Z. Say times in UTC, with the weekday.")
+    return (f"THE CLOCK IS FROZEN. It is {now_utc} ({when}). Treat that instant as \"now\" for every time you mention. "
+            f"Say times in UTC, with the weekday.")
+
+
+def _updates(overrides: dict) -> str:
+    if not overrides:
+        return ""
+    lines = [f"  - {v.get('OBJECT_NAME', '?')} ({k}): element set of epoch {v.get('EPOCH', '?')}" for k, v in overrides.items()]
+    return ("\nFRESH TRACKING THIS SESSION. New element sets have arrived for these objects (SIMULATED for this demo). They\n"
+            "supersede the snapshot: the conjunctions table's rows for them are out of date, and assess_conjunction and\n"
+            "build_assessment recompute those approaches from the new elements. Trust the tools over the table for them.\n"
+            + "\n".join(lines) + "\n")
+
+
+def render(now_utc: str = config.NOW_UTC, overrides: dict | None = None) -> str:
+    simulated = now_utc != config.NOW_UTC or bool(overrides)
+    return (_TEMPLATE.replace("@@CLOCK@@", _clock(now_utc, simulated) + _updates(overrides or {}))
+            .replace("@@NOW_SQL@@", f"'{now_utc}'"))
+
+
+def instruction(ctx) -> str:
+    """ADK InstructionProvider: the instruction for this session, at this session's "now"."""
+    st = ctx.state
+    return render(st.get("sim_now_utc") or config.NOW_UTC, st.get("element_overrides") or {})
+
+
+INSTRUCTION = render()          # the frozen-clock text, for anything that wants to read it

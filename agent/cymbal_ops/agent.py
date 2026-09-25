@@ -23,7 +23,7 @@ from google.adk.tools.mcp_tool.mcp_toolset import McpToolset
 from google.genai import types
 
 from . import config, timing
-from .prompt import INSTRUCTION
+from .prompt import instruction
 from .tools import assess_conjunction, build_assessment, maneuver_cost, run_in_sandbox
 
 log = logging.getLogger("cymbal_ops")
@@ -200,7 +200,7 @@ root_agent = LlmAgent(
     name="cymbal_ops",
     model=model,
     description="Conjunction assessment and maneuver planning for Cymbal Orbital's (fictional) constellation.",
-    instruction=INSTRUCTION,
+    instruction=instruction,             # a function: "now" and fresh tracking come from the session
     tools=TOOLS,
     code_executor=code_executor,
     before_agent_callback=timing.before_agent,

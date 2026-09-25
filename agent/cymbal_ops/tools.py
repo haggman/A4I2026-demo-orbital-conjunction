@@ -7,9 +7,15 @@
 - maneuver_cost: turns delta-v into days of mission life, from Cymbal Orbital's stated budget.
 - build_assessment: assembles the Conjunction Assessment & Maneuver Recommendation. It re-reads the facts
   from BigQuery itself, so the numbers in the report come from the data, not from the model's memory.
+
+Two things come from the session, for the flight dynamics console (console/): "now" (state["sim_now_utc"], default
+the frozen config.NOW_UTC), and fresh tracking (state["element_overrides"] = {norad: OMM}). With an override, the
+table's row for that object is out of date, so the approach is recomputed here from the new elements with the
+same orbit_whatif module the sandbox runs, and the case file carries the new elements.
 """
 import json
 import math
+import sys
 from concurrent.futures import ThreadPoolExecutor
 from functools import lru_cache
 
@@ -17,6 +23,8 @@ from google.adk.tools import ToolContext
 from google.cloud import bigquery
 
 from . import config, sandbox
+
+WHATIF_DIR = str(sandbox.FILES)
 
 OMM = ["OBJECT_NAME", "OBJECT_ID", "EPOCH", "MEAN_MOTION", "ECCENTRICITY", "INCLINATION", "RA_OF_ASC_NODE",
        "ARG_OF_PERICENTER", "MEAN_ANOMALY", "EPHEMERIS_TYPE", "CLASSIFICATION_TYPE", "NORAD_CAT_ID",
@@ -55,7 +63,51 @@ def _plain(v):
     return v.isoformat() if hasattr(v, "isoformat") else v
 
 
-def _facts(fleet_sat: str, norad_cat_id: int) -> dict | None:
+def _now(tool_context) -> str:
+    return (tool_context.state.get("sim_now_utc") if tool_context is not None else None) or config.NOW_UTC
+
+
+def _overrides(tool_context) -> dict:
+    o = (tool_context.state.get("element_overrides") if tool_context is not None else None) or {}
+    return {int(k): v for k, v in o.items()}
+
+
+def _t(iso: str):
+    from datetime import datetime, timezone
+    t = datetime.fromisoformat(str(iso).replace("Z", "+00:00").replace(" ", "T"))
+    return t.astimezone(timezone.utc) if t.tzinfo else t.replace(tzinfo=timezone.utc)
+
+
+def _pc_sigma(d_m, sigma, hbr):
+    return (hbr ** 2 / (2 * sigma ** 2)) * math.exp(-d_m ** 2 / (2 * sigma ** 2))
+
+
+def _recompute(ev: dict, fleet: dict, omm: dict, now_utc: str, info: dict) -> dict:
+    """The approach, measured again from fresh elements: the same search the sandbox's baseline() does."""
+    if WHATIF_DIR not in sys.path:
+        sys.path.insert(0, WHATIF_DIR)
+    import orbit_whatif as ow
+    case = {"fleet_sat": ev["fleet_sat"], "object_name": ev["object_name"], "now_utc": now_utc,
+            "tca_s": (_t(ev["tca_utc"]) - _t(now_utc)).total_seconds(), "hbr_m": float(ev["hbr_m"])}
+    case["_sat"], case["_obj"] = ow._satrec({k: str(fleet[k]) for k in OMM}), ow._satrec({k: str(omm[k]) for k in OMM})
+    case["_now"] = _t(now_utc)
+    b = ow.baseline(case)
+    hbr = float(ev["hbr_m"])
+    sig = [float(x) for x in str(info.get("sigma_m_assumed") or "200,1000").split(",")]
+    age = (_t(b["tca_utc"]) - _t(omm["EPOCH"])).total_seconds() / 86400
+    pc = b["max_pc"]
+    out = dict(ev)
+    out.update(tca_utc=b["tca_utc"], miss_m=b["miss_m"], radial_m=b["radial_m"], in_track_m=b["in_track_m"],
+               cross_track_m=b["cross_track_m"], rel_speed_km_s=b["rel_speed_km_s"], max_pc=pc,
+               pc_sigma_200m=_pc_sigma(b["miss_m"], sig[0], hbr), pc_sigma_1km=_pc_sigma(b["miss_m"], sig[-1], hbr),
+               element_age_at_tca_days=round(age, 2), elements_stale=age > float(info.get("stale_days") or 5),
+               triage="ESCALATE" if pc >= float(info.get("escalate_max_pc") or 1e-4)
+               else "WATCH" if b["miss_m"] < float(info.get("watch_m") or 1000) else "NOISE",
+               elements_source=f"fresh tracking, epoch {omm['EPOCH']} (supersedes the snapshot's row)")
+    return out
+
+
+def _facts(fleet_sat: str, norad_cat_id: int, now_utc: str = config.NOW_UTC, overrides: dict | None = None) -> dict | None:
     n = int(norad_cat_id)
     with ThreadPoolExecutor(max_workers=3) as pool:        # three small queries at once, not one after another
         ev = pool.submit(_rows, "SELECT * FROM {D}.conjunctions WHERE fleet_sat = @f AND norad_cat_id = @n "
@@ -65,8 +117,15 @@ def _facts(fleet_sat: str, norad_cat_id: int) -> dict | None:
         ev, obj, sc = ev.result(), obj.result(), sc.result()
     if not ev or not obj or fleet_sat not in _fleet():
         return None
-    obj, sat, info = obj[0], _fleet()[fleet_sat], _info()
-    return {"event": {k: _plain(v) for k, v in ev[0].items()}, "object": obj, "fleet": sat,
+    obj, sat, info = dict(obj[0]), _fleet()[fleet_sat], _info()
+    event = {k: _plain(v) for k, v in ev[0].items()}
+    event["elements_source"] = "snapshot"
+    fresh = (overrides or {}).get(n)
+    if fresh:
+        obj.update({k: fresh[k] for k in OMM if k in fresh})
+        event = _recompute(event, sat, obj, now_utc, info)
+    event["hours_from_now"] = round((_t(event["tca_utc"]) - _t(now_utc)).total_seconds() / 3600, 2)
+    return {"event": event, "object": obj, "fleet": sat,
             "satcat": {k: _plain(v) for k, v in (sc[0] if sc else {}).items()}, "info": info}
 
 
@@ -88,7 +147,8 @@ def assess_conjunction(fleet_sat: str, norad_cat_id: int, tool_context: ToolCont
         The event, the other object, the assumptions every number rests on, the judgments that need no model,
         and the name of the staged case file with a code example for the sandbox.
     """
-    f = _facts(fleet_sat, norad_cat_id)
+    now = _now(tool_context)
+    f = _facts(fleet_sat, norad_cat_id, now, _overrides(tool_context))
     if f is None:
         return {"error": f"No screened approach between {fleet_sat} and {norad_cat_id} within 10 km this week.",
                 "hint": "List candidates with execute_sql_readonly on the conjunctions table first."}
@@ -98,15 +158,15 @@ def assess_conjunction(fleet_sat: str, norad_cat_id: int, tool_context: ToolCont
     case_file = f"case_{fleet_sat}_{int(norad_cat_id)}.json"
     case = {"fleet_sat": fleet_sat, "object_name": ev["object_name"], "norad_cat_id": int(norad_cat_id),
             "fleet_omm": {k: str(f["fleet"][k]) for k in OMM}, "object_omm": {k: str(obj[k]) for k in OMM},
-            "now_utc": config.NOW_UTC, "tca_utc": ev["tca_utc"], "tca_s": float(ev["hours_from_now"]) * 3600.0,
+            "now_utc": now, "tca_utc": ev["tca_utc"], "tca_s": float(ev["hours_from_now"]) * 3600.0,
             "miss_m": float(ev["miss_m"]), "hbr_m": hbr, "clear_pc": config.CLEAR_PC}
     staged = sandbox.stage({case_file: json.dumps(case).encode()})
     tool_context.state["last_case"] = {"fleet_sat": fleet_sat, "norad_cat_id": int(norad_cat_id), "case_file": case_file}
     return {
-        "now_utc": config.NOW_UTC,
+        "now_utc": now,
         "event": {k: ev[k] for k in ("fleet_sat", "object_name", "tca_utc", "hours_from_now", "miss_m", "radial_m",
                                      "in_track_m", "cross_track_m", "rel_speed_km_s", "max_pc", "pc_sigma_200m",
-                                     "pc_sigma_1km", "triage")},
+                                     "pc_sigma_1km", "triage", "elements_source")},
         "object": {"name": ev["object_name"], "norad_cat_id": int(norad_cat_id), "international_designator": obj["OBJECT_ID"],
                    "type": obj.get("OBJECT_TYPE"), "type_source": obj.get("OBJECT_TYPE_SOURCE", "SATCAT"),
                    "owner": f["satcat"].get("OWNER"), "launch_date": f["satcat"].get("LAUNCH_DATE"),
@@ -120,6 +180,7 @@ def assess_conjunction(fleet_sat: str, norad_cat_id: int, tool_context: ToolCont
             "elements_days_old_at_tca": ev["element_age_at_tca_days"],
             "elements_stale": bool(ev["elements_stale"]),
             "stale_means": f"the object's elements will be more than {info.get('stale_days')} days old at closest approach; ask for fresh tracking before spending propellant",
+            "too_late_to_act": float(ev["hours_from_now"]) < 0.5,
             "other_object_can_maneuver": ops == "+",
             "other_object_status": {"+": "operational—it might move too; coordinate with its operator", "-": "dead—it cannot move",
                                     "": "debris or rocket body—it cannot move"}.get(ops, f"status code {ops!r}"),
@@ -197,14 +258,15 @@ def build_assessment(fleet_sat: str, norad_cat_id: int, recommendation: str, rat
         return {"error": f"recommendation must be one of {RECOMMENDATIONS}"}
     if rec == "MANEUVER" and not (burn_utc and delta_v_m_s > 0 and miss_after_m > 0):
         return {"error": "a MANEUVER needs burn_utc, delta_v_m_s and miss_after_m from the sandbox run"}
-    f = _facts(fleet_sat, norad_cat_id)
+    now = _now(tool_context)
+    f = _facts(fleet_sat, norad_cat_id, now, _overrides(tool_context))
     if f is None:
         return {"error": f"No screened approach between {fleet_sat} and {norad_cat_id}."}
     ev, info = f["event"], f["info"]
     hbr = float(ev["hbr_m"])
     a = {
         "title": "Conjunction Assessment & Maneuver Recommendation",
-        "as_of_utc": config.NOW_UTC, "operator": "Cymbal Orbital (fictional)",
+        "as_of_utc": now, "operator": "Cymbal Orbital (fictional)", "elements_source": ev["elements_source"],
         "event": {"our_satellite": fleet_sat, "object": ev["object_name"], "norad_cat_id": int(norad_cat_id),
                   "object_type": ev["object_type"], "parent_event": ev.get("parent_event"),
                   "closest_approach_utc": ev["tca_utc"], "hours_from_now": ev["hours_from_now"],
@@ -236,7 +298,8 @@ def build_assessment(fleet_sat: str, norad_cat_id: int, recommendation: str, rat
           f"(radial {ev['radial_m']:,.0f} · in-track {ev['in_track_m']:,.0f} · cross-track {ev['cross_track_m']:,.0f} m).", "",
           f"**Risk.** Worst case {ev['max_pc']:.1e}; if the 1-sigma uncertainty is 200 m, {ev['pc_sigma_200m']:.1e}; if 1 km, "
           f"{ev['pc_sigma_1km']:.1e}. The object's elements will be {ev['element_age_at_tca_days']} days old"
-          + (" — **stale**." if ev["elements_stale"] else "."), "",
+          + (" — **stale**." if ev["elements_stale"] else ".")
+          + (f" *Elements: {ev['elements_source']}.*" if ev["elements_source"] != "snapshot" else ""), "",
           f"**Recommendation: {rec}.** {rationale.strip()}"]
     if rec == "MANEUVER":
         m = a["maneuver"]
@@ -246,5 +309,6 @@ def build_assessment(fleet_sat: str, norad_cat_id: int, recommendation: str, rat
     md += ["", "**Assumptions.** " + " ".join(a["assumptions"]), "", "**What we cannot see.** " + " ".join(a["cannot_see"]),
            "", f"*{a['source']}*"]
     a["markdown"] = "\n".join(md)
+    a["fleet_sat"], a["norad_cat_id"] = fleet_sat, int(norad_cat_id)
     tool_context.state["assessment"] = a
     return a
