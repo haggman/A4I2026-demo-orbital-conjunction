@@ -19,7 +19,7 @@ from google.adk.tools.mcp_tool.mcp_session_manager import StreamableHTTPConnecti
 from google.adk.tools.mcp_tool.mcp_toolset import McpToolset
 from google.genai import types
 
-from . import config
+from . import config, timing
 from .prompt import INSTRUCTION
 from .tools import assess_conjunction, build_assessment, maneuver_cost, run_in_sandbox
 
@@ -69,6 +69,13 @@ class DemoGemini(Gemini):
     async def generate_content_async(self, llm_request, stream: bool = False):
         for attempt in range(config.EMPTY_REPLY_RETRIES + 1):
             held, useful, t0 = [], False, time.perf_counter()
+            if not getattr(self, "_where_logged", False):   # once: which endpoint are we really calling?
+                c = getattr(self.api_client, "_api_client", None)
+                timing.log(f"Gemini client: model {llm_request.model}, vertex {getattr(c, 'vertexai', '?')}, "
+                           f"project {getattr(c, 'project', '?')}, location {getattr(c, 'location', '?')}, "
+                           f"thinking {config.THINKING_LEVEL}")
+                object.__setattr__(self, "_where_logged", True)
+            timing.log(f"model call {attempt + 1} sent ({len(llm_request.contents)} contents)")
             async for r in super().generate_content_async(llm_request, stream):
                 useful = useful or _useful(r)
                 if not r.partial and _has_code(r) and not r.error_code:
@@ -79,6 +86,10 @@ class DemoGemini(Gemini):
                     held.append(r)              # the complete reply waits until we know it is not empty
             last = held[-1] if held else None
             reason = str(getattr(last, "finish_reason", None) or "").split(".")[-1] or None
+            um = getattr(last, "usage_metadata", None)
+            timing.log(f"model reply: {time.perf_counter() - t0:.1f}s, finish {reason}, tokens in "
+                       f"{getattr(um, 'prompt_token_count', '?')} think {getattr(um, 'thoughts_token_count', 0) or 0} "
+                       f"out {getattr(um, 'candidates_token_count', '?')}")
             if useful or attempt == config.EMPTY_REPLY_RETRIES or reason not in _RETRYABLE:
                 for r in held:
                     yield r
@@ -105,7 +116,19 @@ def _bigquery_auth(_ctx) -> dict[str, str]:
     return {"Authorization": f"Bearer {_creds.token}", "x-goog-user-project": config.PROJECT}
 
 
-bigquery_mcp = McpToolset(
+class TimedMcpToolset(McpToolset):
+    """ADK asks the toolset for its tools before every model call; on a new connection that means an MCP
+    handshake with BigQuery. Log how long it takes, because it is the step most likely to differ between
+    Cloud Shell and Cloud Run."""
+
+    async def get_tools(self, readonly_context=None):
+        t0 = time.perf_counter()
+        tools = await super().get_tools(readonly_context)
+        timing.log(f"BigQuery MCP tool list: {time.perf_counter() - t0:.1f}s ({len(tools)} tools)")
+        return tools
+
+
+bigquery_mcp = TimedMcpToolset(
     connection_params=StreamableHTTPConnectionParams(url="https://bigquery.googleapis.com/mcp", timeout=30.0),
     header_provider=_bigquery_auth,
     tool_filter=["execute_sql_readonly", "get_table_info", "list_table_ids"],   # read-only, on purpose
@@ -142,6 +165,10 @@ root_agent = LlmAgent(
     instruction=INSTRUCTION,
     tools=TOOLS,
     code_executor=code_executor,
+    before_agent_callback=timing.before_agent,
+    after_agent_callback=timing.after_agent,
+    before_tool_callback=timing.before_tool,
+    after_tool_callback=timing.after_tool,
     generate_content_config=types.GenerateContentConfig(
         thinking_config=types.ThinkingConfig(thinking_level=config.THINKING_LEVEL.upper()),
     ),
