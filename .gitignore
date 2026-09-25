@@ -21,3 +21,7 @@ Thumbs.db
 # Local data
 *.parquet
 *.csv.gz
+
+# The console's local copy of the snapshot slice it needs (console/data.py writes it; orbital data is not committed)
+console/.snapshot_extract.json
+console/.cache/
