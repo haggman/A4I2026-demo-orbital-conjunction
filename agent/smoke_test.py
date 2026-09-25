@@ -2,6 +2,7 @@
 
     python agent/smoke_test.py              # after python agent/setup_sandbox.py
     python agent/smoke_test.py --quick      # two questions instead of six
+    A4I_CODE_PATH=executor python agent/smoke_test.py --quick   # try ADK's code executor instead of our tool
 
 It runs the agent in-process (no Cloud Run needed) against the a4i_orbit tables, and checks the things the
 demo depends on: the managed MCP server answered, our tools ran, code ran in the sandbox, and an
@@ -59,6 +60,8 @@ async def run(questions):
                 for p in (ev.content.parts if ev.content and ev.content.parts else []):
                     if p.function_call:
                         calls.append(p.function_call.name)
+                        if p.function_call.name == "run_in_sandbox":        # the default code path
+                            code.append(str((p.function_call.args or {}).get("code", ""))[:400])
                         started[p.function_call.id or p.function_call.name] = t
                         kinds.append(f"call:{p.function_call.name}")
                     if p.function_response:
@@ -68,6 +71,8 @@ async def run(questions):
                         if t_start is not None:
                             tool_s.setdefault(name, []).append(round(t - t_start, 1))
                         kinds.append(f"result:{name}")
+                        if name == "run_in_sandbox" and isinstance(r, dict):
+                            results.append((str(r.get("stdout", "")) + str(r.get("stderr", "")))[:600])
                         if isinstance(r, dict) and ("error" in r or r.get("isError")):
                             errors.append({name: str(r)[:300]})
                     if p.executable_code:
@@ -87,6 +92,10 @@ async def run(questions):
                     kinds.append(f"END finish_reason={fr} error_code={ev.error_code} {(ev.error_message or '')[:160]}")
                     if ev.error_code:
                         errors.append({"model": f"{ev.error_code}: {(ev.error_message or '')[:200]}"})
+                um = getattr(ev, "usage_metadata", None)
+                if um and ev.author != "user":
+                    kinds.append(f"[tokens in {um.prompt_token_count} think {um.thoughts_token_count or 0} "
+                                 f"out {um.candidates_token_count or 0}]")
                 if not kinds:
                     kinds.append("(no content)")
                 timeline.append(f"{t:>6}s {ev.author}: " + ", ".join(kinds))
@@ -129,6 +138,7 @@ def main():
     block = {"python": sys.version.split()[0], "platform": platform.platform(), "versions": vers,
              "project": os.environ.get("GOOGLE_CLOUD_PROJECT"), "sandbox": os.environ.get("A4I_SANDBOX"),
              "model": f"{config.MODEL} @ {config.MODEL_LOCATION}, thinking {config.THINKING_LEVEL}",
+             "code_path": config.CODE_PATH,
              "total_s": round(time.perf_counter() - t0, 1),
              "empty_model_replies_retried": EMPTY_REPLIES,
              "checks": {k: ("PASS" if v else "FAIL") for k, v in checks.items()},

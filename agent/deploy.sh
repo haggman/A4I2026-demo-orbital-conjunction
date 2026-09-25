@@ -54,6 +54,7 @@ done
 
 bold "2/3  Deploying ${SERVICE} (ADK ${ADK_VERSION}) to ${REGION}"
 ENV_VARS="GOOGLE_CLOUD_PROJECT=${PROJECT},GOOGLE_GENAI_USE_VERTEXAI=True,A4I_SANDBOX=${A4I_SANDBOX}"
+ENV_VARS+=",A4I_CODE_PATH=${A4I_CODE_PATH:-tool},A4I_THINKING_LEVEL=${A4I_THINKING_LEVEL:-low}"
 adk deploy cloud_run --project "${PROJECT}" --region "${REGION}" --service_name "${SERVICE}" \
   --adk_version "${ADK_VERSION}" --with_ui agent/cymbal_ops \
   -- --service-account "${SA}" --set-env-vars "${ENV_VARS}" --no-allow-unauthenticated

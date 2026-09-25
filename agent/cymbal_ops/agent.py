@@ -3,7 +3,8 @@
 One ADK agent, three kinds of tool:
 - BigQuery's Google-managed MCP server, read-only, for any question the tables can answer;
 - three tools we wrote, for the judgment (assess_conjunction, maneuver_cost, build_assessment);
-- an Agent Runtime code sandbox, through ADK's AgentEngineSandboxCodeExecutor, for the orbital what-ifs.
+- an Agent Runtime code sandbox for the orbital what-ifs: through our run_in_sandbox tool by default, or through
+  ADK's AgentEngineSandboxCodeExecutor (A4I_CODE_PATH=executor).
 """
 import logging
 import os
@@ -20,7 +21,7 @@ from google.genai import types
 
 from . import config
 from .prompt import INSTRUCTION
-from .tools import assess_conjunction, build_assessment, maneuver_cost
+from .tools import assess_conjunction, build_assessment, maneuver_cost, run_in_sandbox
 
 log = logging.getLogger("cymbal_ops")
 
@@ -59,7 +60,10 @@ class DemoGemini(Gemini):
        there: the code runs, and the operator never hears what it found. With no finish reason on the reply,
        that check stands aside and the flow loops back to the model, as the code executor intends.
        (Streaming turns, which adk web can use, skip that check already.)
-    2. If a reply still comes back with nothing in it (no words, no tool call, no code), ask once more.
+    2. If a reply still comes back with nothing in it (no words, no tool call, no code), ask once more. Gemini
+       sometimes answers MALFORMED_FUNCTION_CALL; a second sample usually comes back well-formed. After plain text
+       (such as sandbox output) we add a one-line nudge; after a tool result we resend the request unchanged,
+       because in testing, adding text to a tool result made the API answer 400 ("ending with a model turn").
     """
 
     async def generate_content_async(self, llm_request, stream: bool = False):
@@ -84,10 +88,8 @@ class DemoGemini(Gemini):
                                   "seconds": round(time.perf_counter() - t0, 1)})
             log.warning("Empty model reply (finish_reason=%s); asking once more.", reason)
             tail = llm_request.contents[-1] if llm_request.contents else None
-            if tail is not None and tail.role == "user":
+            if tail is not None and tail.role == "user" and not any(p.function_response for p in tail.parts or []):
                 tail.parts = list(tail.parts or []) + [types.Part(text=_NUDGE)]
-            else:
-                llm_request.contents.append(types.Content(role="user", parts=[types.Part(text=_NUDGE)]))
 
 
 _creds = None
@@ -117,21 +119,28 @@ model = DemoGemini(
     retry_options=types.HttpRetryOptions(attempts=3, initial_delay=1.0),
 )
 
-# The sandbox. ADK's defaults also accept code fenced as ```tool_code and show the output back to the model
-# fenced as ```tool_output, which is how Gemini's own built-in code tool talks; this agent does not have that
-# tool, so we keep to what the instructions teach: ```python in, and output that says where it came from.
-code_executor = AgentEngineSandboxCodeExecutor(
-    sandbox_resource_name=config.SANDBOX,
-    code_block_delimiters=[("```python\n", "\n```")],
-    execution_result_delimiters=("Sandbox output (the code above ran in the Agent Runtime sandbox):\n```\n", "\n```"),
-)
+# The sandbox, reached one of two ways (config.CODE_PATH). By default, a function tool: the model calls
+# run_in_sandbox(code) and our tool runs it in the Agent Runtime sandbox. Or ADK's own code executor, which runs
+# ```python blocks from the model's reply in the same sandbox. ADK's executor also accepts ```tool_code and shows
+# output back fenced as ```tool_output, which is how Gemini's built-in code tool talks; this agent does not have
+# that tool, so we keep to ```python in, and output that says where it came from.
+TOOLS = [bigquery_mcp, assess_conjunction, maneuver_cost, build_assessment]
+if config.CODE_PATH == "executor":
+    code_executor = AgentEngineSandboxCodeExecutor(
+        sandbox_resource_name=config.SANDBOX,
+        code_block_delimiters=[("```python\n", "\n```")],
+        execution_result_delimiters=("Sandbox output (the code above ran in the Agent Runtime sandbox):\n```\n", "\n```"),
+    )
+else:
+    code_executor = None
+    TOOLS.insert(2, run_in_sandbox)
 
 root_agent = LlmAgent(
     name="cymbal_ops",
     model=model,
     description="Conjunction assessment and maneuver planning for Cymbal Orbital's (fictional) constellation.",
     instruction=INSTRUCTION,
-    tools=[bigquery_mcp, assess_conjunction, maneuver_cost, build_assessment],
+    tools=TOOLS,
     code_executor=code_executor,
     generate_content_config=types.GenerateContentConfig(
         thinking_config=types.ThinkingConfig(thinking_level=config.THINKING_LEVEL.upper()),

@@ -21,6 +21,14 @@ MODEL_LOCATION = os.environ.get("A4I_MODEL_LOCATION", "global")
 # agent's routing; set A4I_THINKING_LEVEL=high if answers get sloppy.
 THINKING_LEVEL = os.environ.get("A4I_THINKING_LEVEL", "low")
 
+# How the model's Python reaches the sandbox.
+#   "tool"     (default) a function tool, run_in_sandbox(code), that runs the code in the Agent Runtime sandbox.
+#              Function calling is the path Gemini is most practised at, so this is the one to put on a stage.
+#   "executor" ADK's AgentEngineSandboxCodeExecutor: the model writes a ```python block in its reply and ADK runs
+#              it in the same sandbox. Worth showing; in testing with ADK 2.7.0 and Gemini 3.8 Flash it was the
+#              less dependable of the two (see agent.py and agent/README.md).
+CODE_PATH = os.environ.get("A4I_CODE_PATH", "tool").strip().lower()
+
 # If the model comes back with nothing to say (no text, no tool call, no code), ask it once more before giving
 # up. See agent.py for why that happens after a code block, and how we steer around it.
 EMPTY_REPLY_RETRIES = int(os.environ.get("A4I_EMPTY_REPLY_RETRIES", "1"))

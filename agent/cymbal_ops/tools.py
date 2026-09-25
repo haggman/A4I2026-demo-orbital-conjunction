@@ -3,6 +3,7 @@
 - assess_conjunction: gathers every fact about one close approach, states the assumptions, makes the
   judgments that do not need a model (is the tracking stale? can the other object dodge?), and stages a
   case file in the sandbox so the model's what-if code can pick it up.
+- run_in_sandbox: runs the model's Python in the Agent Runtime code sandbox (the default code path).
 - maneuver_cost: turns delta-v into days of mission life, from Cymbal Orbital's stated budget.
 - build_assessment: assembles the Conjunction Assessment & Maneuver Recommendation. It re-reads the facts
   from BigQuery itself, so the numbers in the report come from the data, not from the model's memory.
@@ -129,6 +130,30 @@ def assess_conjunction(fleet_sat: str, norad_cat_id: int, tool_context: ToolCont
                     "example_code": (f"import orbit_whatif as ow\ncase = ow.load_case('{case_file}')\n"
                                      f"print(ow.baseline(case))\nprint(ow.smallest_burn(case, '<burn time UTC, ISO>'))")},
     }
+
+
+# Make sure the staged files are importable, even if the sandbox's Python has restarted since they were staged.
+_PREAMBLE = "import os as _os, sys as _sys\n_sys.path.insert(0, _os.getcwd()) if _os.getcwd() not in _sys.path else None\n"
+
+
+def run_in_sandbox(code: str, tool_context: ToolContext) -> dict:
+    """Run Python in Cymbal Orbital's isolated Agent Runtime code sandbox and return what it printed.
+
+    Use it for orbital what-ifs, through the orbit_whatif module, after assess_conjunction has staged the case.
+    The sandbox has numpy, scipy and our orbit_whatif module; it has no network and nothing else can be installed.
+
+    Args:
+        code: the Python to run. Print every result you need; only printed output comes back.
+    """
+    try:
+        out = sandbox.run(_PREAMBLE + code)
+    except Exception as e:                       # the sandbox call itself failed: say so, plainly
+        return {"error": f"The sandbox could not run the code: {type(e).__name__}: {str(e)[:300]}"}
+    result = {"stdout": out["stdout"][-8000:], "stderr": out["stderr"][-3000:]}
+    if "No module named 'orbit_whatif'" in out["stderr"] or "No such file" in out["stderr"]:
+        result["hint"] = "The sandbox has been reset. Call assess_conjunction again to re-stage the case, then retry."
+    tool_context.state["last_sandbox_run"] = {"code": code, **result}
+    return result
 
 
 def maneuver_cost(delta_v_m_s: float) -> dict:
