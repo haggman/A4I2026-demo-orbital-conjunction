@@ -1,0 +1,42 @@
+Agents for Impact 2026 — Kickoff Demo: Orbital Conjunction Screening
+Copyright 2026 ROI Training, Inc.
+
+This product includes software and documentation developed by ROI Training, Inc.
+for the Google Cloud "Agents for Impact" program.
+
+Licensed under the Apache License, Version 2.0 (the "License"); you may not use
+these files except in compliance with the License. You may obtain a copy of the
+License in the LICENSE file distributed with this work.
+
+---
+
+SCOPE OF THIS LICENSE
+
+The Apache License above covers the original material in this repository: the
+notebooks, scripts, agent, user interface, documentation, and the fictional
+Cymbal Orbital fleet definition.
+
+It does NOT re-license the orbital data this project reads, and no orbital data
+is committed to this repository.
+
+ORBITAL DATA
+
+Orbital elements (OMM) and the satellite catalogue (SATCAT) originate with U.S.
+Space Command and are obtained via Space-Track.org and CelesTrak (celestrak.org).
+U.S. Space Command has provided express blanket approval for the transfer and
+redistribution of basic space situational awareness data — orbital elements,
+the satellite catalogue, and decay data — conditioned on appropriate citation.
+This project uses only that category of data, and cites it as:
+
+    Orbital data: U.S. Space Command, via Space-Track.org; satellite catalogue
+    via CelesTrak (celestrak.org).
+
+The U.S. Government does not warrant the accuracy or completeness of this data.
+Conjunction data messages, covariance and other advanced products are not used
+and are not covered by that approval.
+
+THIRD-PARTY SOFTWARE
+
+sgp4 (python-sgp4), Copyright © 2012–2016 Brandon Rhodes, MIT License.
+The agent uploads sgp4's pure-Python modules, with their license, to its code
+execution sandbox at run time.
