@@ -103,7 +103,7 @@ function drawPlane() {
     const [x, y, out] = pt(e.plane_m);
     const col = e.triage === "ESCALATE" ? "var(--escalate)" : e.triage === "WATCH" ? "var(--watch)" : e.triage === "NOISE" ? "var(--noise)" : "var(--ok)";
     const below = y < -PX + 30;
-    g += `<circle cx="${x}" cy="${y}" r="9" fill="${col}"/><text x="${Math.max(-PX + 60, Math.min(PX - 60, x))}" y="${below ? y + 26 : y - 15}" text-anchor="middle" class="halo" style="font-weight:700;font-size:14px">${esc(e.object_name)} ${Math.round(e.miss_m).toLocaleString()} m${out ? " (off scale)" : ""}</text>`;
+    g += `<circle cx="${x}" cy="${y}" r="9" fill="${col}"/><text x="${Math.max(-PX + 100, Math.min(PX - 100, x))}" y="${below ? y + 26 : y - 15}" text-anchor="middle" class="halo" style="font-weight:700;font-size:14px">${esc(e.object_name)} ${Math.round(e.miss_m).toLocaleString()} m${out ? " (off scale)" : ""}</text>`;
   }
   $("plane").setAttribute("viewBox", `-${PX + 24} -${PX + 12} ${2 * PX + 48} ${2 * PX + 48}`);
   $("plane").innerHTML = g;
