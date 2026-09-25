@@ -10,6 +10,7 @@ _a4i_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 _a4i_venv="${A4I_VENV:-$HOME/.venvs/a4i-demo}"
 _a4i_adk="${ADK_VERSION:-2.7.0}"
 _a4i_reqs="${_a4i_root}/agent/cymbal_ops/requirements.txt"
+_a4i_console_reqs="${_a4i_root}/console/requirements.txt"      # the flight dynamics console (Stage 4)
 
 if [[ ! -x "${_a4i_venv}/bin/python" ]]; then
   echo "Making the Python environment at ${_a4i_venv} (a minute or two, once)..."
@@ -18,11 +19,11 @@ fi
 # shellcheck disable=SC1091
 source "${_a4i_venv}/bin/activate"
 
-_a4i_want="$( { cat "${_a4i_reqs}"; echo "google-adk[mcp]==${_a4i_adk}"; } | sha256sum | cut -c1-16)"
+_a4i_want="$( { cat "${_a4i_reqs}" "${_a4i_console_reqs}"; echo "google-adk[mcp]==${_a4i_adk}"; } | sha256sum | cut -c1-16)"
 if [[ "$(cat "${_a4i_venv}/.a4i-installed" 2>/dev/null)" != "${_a4i_want}" ]]; then
   echo "Installing the pinned packages (ADK ${_a4i_adk})..."
   pip install -q --upgrade pip \
-    && pip install -q "google-adk[mcp]==${_a4i_adk}" -r "${_a4i_reqs}" \
+    && pip install -q "google-adk[mcp]==${_a4i_adk}" -r "${_a4i_reqs}" -r "${_a4i_console_reqs}" \
     && echo "${_a4i_want}" > "${_a4i_venv}/.a4i-installed" \
     || { echo "The install failed; fix the error above and source this again." >&2; return 1; }
 fi
@@ -43,4 +44,5 @@ else
   echo "  sandbox: none yet. Run: python agent/setup_sandbox.py"
 fi
 echo "  settings file: demo.env    try: python agent/smoke_test.py --quick  ·  python agent/model_check.py  ·  adk web agent"
-unset _a4i_root _a4i_venv _a4i_adk _a4i_reqs _a4i_want _a4i_project
+echo "  console: uvicorn console.app:app --port 8080  (then Web Preview on port 8080)"
+unset _a4i_root _a4i_venv _a4i_adk _a4i_reqs _a4i_console_reqs _a4i_want _a4i_project
