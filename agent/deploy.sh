@@ -23,6 +23,12 @@ ADK_VERSION="${ADK_VERSION:-2.7.0}"      # what Colab Enterprise ships, and what
 REGION="${REGION:-us-central1}"
 SERVICE="${SERVICE:-cymbal-ops}"
 SA_NAME="cymbal-ops-agent"
+# Cloud Run's defaults (512 MiB, 1 vCPU, any number of instances) are too small for ADK plus the Google
+# clients, and the ADK web UI keeps sessions in memory, so a second instance would not know your session.
+# One instance, room to work. MIN_INSTANCES=1 on the day keeps it warm (it bills while it is up).
+MEMORY="${MEMORY:-2Gi}"
+CPU="${CPU:-2}"
+MIN_INSTANCES="${MIN_INSTANCES:-0}"
 ENV_FILE="agent/cymbal_ops/.env"
 
 bold() { printf '\033[1m%s\033[0m\n' "$*"; }
@@ -57,7 +63,8 @@ ENV_VARS="GOOGLE_CLOUD_PROJECT=${PROJECT},GOOGLE_GENAI_USE_VERTEXAI=True,A4I_SAN
 ENV_VARS+=",A4I_CODE_PATH=${A4I_CODE_PATH:-tool},A4I_THINKING_LEVEL=${A4I_THINKING_LEVEL:-low}"
 adk deploy cloud_run --project "${PROJECT}" --region "${REGION}" --service_name "${SERVICE}" \
   --adk_version "${ADK_VERSION}" --with_ui agent/cymbal_ops \
-  -- --service-account "${SA}" --set-env-vars "${ENV_VARS}" --no-allow-unauthenticated
+  -- --service-account "${SA}" --set-env-vars "${ENV_VARS}" --no-allow-unauthenticated \
+     --memory "${MEMORY}" --cpu "${CPU}" --max-instances 1 --min-instances "${MIN_INSTANCES}" --timeout 600
 
 bold "3/3  Reaching it"
 URL="$(gcloud run services describe "${SERVICE}" --project "${PROJECT}" --region "${REGION}" --format='value(status.url)')"
