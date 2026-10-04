@@ -6,9 +6,10 @@ SIMULATED, and labelled so everywhere it appears. How it is made, so you can che
 
   1. Start from the snapshot's own element set for the object.
   2. Move it to the new epoch with SGP4's own secular rates (mean anomaly, node, argument of perigee), then
-     re-anchor it: SGP4's drag terms are not secular rates, so the moved set drifts a few km along-track from
-     the original; a small correction puts it back where the original set says the object is at closest
-     approach. After that the recomputed miss must come back at the snapshot's value. We check it.
+     re-anchor it: SGP4's drag terms are not secular rates, so the moved set lands kilometres from the original;
+     three small corrections (mean anomaly, mean motion, node) put it back exactly where the original set says
+     the object is at closest approach. The recomputed miss must then come back at the snapshot's value, to
+     the metre. We check it.
   3. The simulated measurement: shift the object along its own track (a change of mean anomaly) until the
      recomputed miss equals a stated target. Along-track error is what grows fastest in old elements, so this
      is the realistic kind of change. Its size is printed (along_track_shift_km).
@@ -71,10 +72,9 @@ def main():
     tca = O.utc(ev["tca_utc"])
     moved = E.to_epoch(orig, O.utc(UPDATE_B_EPOCH))
     miss_moved, _ = E.miss_with(s, moved, tca)
-    dm0, resid_m = E.anchor(orig, moved, tca)
-    anchored = E.shift_anomaly(moved, dm0)
+    anchored, corr, apart_m, resid_m = E.anchor(orig, moved, tca)
     miss_anchored, _ = E.miss_with(s, anchored, tca)
-    if abs(miss_anchored - float(ev["miss_m"])) > 5.0:
+    if abs(miss_anchored - float(ev["miss_m"])) > 1.0:
         raise SystemExit(f"re-anchoring failed: {miss_anchored:.1f} m against the snapshot's {ev['miss_m']} m")
     dm = E.tune_miss(s, anchored, tca, UPDATE_B_TARGET_M)
     new = E.shift_anomaly(anchored, dm)
@@ -91,8 +91,8 @@ def main():
         "omm": {k: str(v) for k, v in new.items()},
         "how": {"from_epoch_utc": O.iso(O.utc(orig["EPOCH"]), "milliseconds"), "moved_by_secular_rates_to": UPDATE_B_EPOCH,
                 "miss_after_secular_move_m": round(miss_moved, 1),
-                "drag_reanchor_deg": round(dm0, 7), "drag_reanchor_km": round(abs(dm0) * 3.141592653589793 / 180 * a_km, 2),
-                "position_residual_after_reanchor_m": round(resid_m, 1),
+                "secular_move_off_by_km": round(apart_m / 1000.0, 2), "drag_reanchor": corr,
+                "position_residual_after_reanchor_m": round(resid_m, 3),
                 "miss_after_reanchor_m": round(miss_anchored, 1), "snapshot_miss_m": float(ev["miss_m"]),
                 "SIMULATED_mean_anomaly_shift_deg": round(dm, 7),
                 "SIMULATED_along_track_shift_km": round(abs(dm) * 3.141592653589793 / 180 * a_km, 2),

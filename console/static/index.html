@@ -37,18 +37,19 @@
   </section>
 
   <section class="focus panel">
+    <div id="banner" class="banner"></div>
     <h2 id="ftitle">Encounter</h2>
     <div class="focus-grid">
-      <div><svg id="plane" viewBox="-230 -230 460 460" aria-label="Encounter plane"></svg>
-        <div class="caption">Where the other object passes us, in the plane square to our relative velocity at closest approach. Rings: worst-case Pc 1e-4 (escalate), 1 km (watch), Pc 1e-6 (clear).</div></div>
+      <svg id="plane" viewBox="-230 -230 460 460" aria-label="Encounter plane"></svg>
       <div class="facts">
         <div class="gauge">
-          <div class="label">Range now</div>
+          <div id="rlabel" class="label">Range now</div>
           <div id="range" class="range">—</div>
           <div class="bar"><div id="rangebar"></div></div>
           <div id="countdown" class="sub">—</div>
         </div>
         <dl id="facts"></dl>
+        <div class="caption">The picture: where the other object passes us at closest approach, looking along the line it comes in on. We are the square. Inside the red ring: escalate. Outside the green ring: clear.</div>
       </div>
     </div>
   </section>

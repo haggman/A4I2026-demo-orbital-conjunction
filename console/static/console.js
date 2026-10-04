@@ -42,7 +42,7 @@ function span(s) {
 
 function drawHeader() {
   $("clock").textContent = S.now;
-  $("next").textContent = S.waiting ? "Paused: the agent is on it" : S.next ? `next: ${S.next.kind} ${S.next.at} (${S.next.in})` : "end of the week";
+  $("next").textContent = S.waiting ? "clock paused" : S.playing ? `running at ${S.speeds[S.speed_i].label}` : "paused: press ▶ or Skip to next";
   $("play").textContent = S.playing ? "⏸" : "▶";
   $("play").disabled = !!S.waiting;
   $("speeds").innerHTML = S.speeds.map((s, i) => `<button class="${i === S.speed_i ? "on" : ""}" data-i="${i}">${esc(s.label)}</button>`).join("");
@@ -64,7 +64,7 @@ function drawHeader() {
 
 function drawFleet() {
   const f = S.focus ? S.focus.fleet_sat : null;
-  $("fleet").innerHTML = S.fleet.map((s) => `<div class="sat ${s.triage} ${s.sat === f ? "focus" : ""}" data-ev="${esc(s.event || "")}">
+  $("fleet").innerHTML = S.fleet.map((s) => `<div class="sat ${s.triage} ${s.sat === f ? "sel" : ""}" data-ev="${esc(s.event || "")}">
     <b>${esc(s.sat)}</b> ${s.triage === "CLEAR" ? "" : `<span class="tag ${s.triage}">${s.triage}</span>`}<div>${esc(s.next)}</div></div>`).join("");
   $("fleet").querySelectorAll(".sat").forEach((d) => (d.onclick = () => d.dataset.ev && control("focus", d.dataset.ev)));
 }
@@ -89,7 +89,9 @@ function drawPlane() {
     g += `<text x="0" y="${rr + 14}" text-anchor="middle" class="halo" style="fill:${l.c}">${l.t} ${Math.round(l.m).toLocaleString()} m</text>`;
   }
   g += `<text x="${PX - 4}" y="16" text-anchor="end" class="muted halo">sideways →</text><text x="6" y="${-PX + 14}" class="muted">↑ up (radial)</text>`;
-  g += `<rect x="-6" y="-6" width="12" height="12" fill="var(--info)"/><text x="10" y="18" class="muted">${esc(e.fleet_sat)}</text>`;
+  g += `<rect x="-6" y="-6" width="12" height="12" fill="var(--info)"/>`;
+  const objRight = e.plane_m ? pt(e.plane_m)[0] > 0 : true;      // put our label on the other side from theirs
+  g += `<text x="${objRight ? -12 : 12}" y="22" text-anchor="${objRight ? "end" : "start"}" class="muted halo">${esc(e.fleet_sat)} (us)</text>`;
   if (e.plane_before_m) {
     const [bx, by] = pt(e.plane_before_m), [ax, ay] = pt(e.plane_m);
     g += `<circle cx="${bx}" cy="${by}" r="6" fill="none" stroke="var(--muted)" stroke-width="2"/><text x="${bx + 9}" y="${by + 4}" class="muted halo">before</text>`;
@@ -109,12 +111,32 @@ function drawPlane() {
   $("plane").innerHTML = g;
 }
 
+function drawBanner() {
+  const b = $("banner"), c = S.coming_up;
+  if (S.waiting) {
+    const w = S.cards.find((x) => x.id === S.waiting);
+    const ready = w && w.status !== "thinking";
+    b.className = "banner agent";
+    b.innerHTML = `<span class="k">${ready ? "YOUR CALL" : "THE AGENT IS ON IT"}</span><span class="what">${esc(w ? w.title : "")}</span>
+      <span class="when">${ready ? "Approve or Hold on the agent's card. The clock waits for you." : "The clock is paused while the agent works."}</span>`;
+    return;
+  }
+  if (!c) { b.className = "banner"; b.innerHTML = `<span class="k">END OF THE WEEK</span><span class="what">That's the pinned week.</span>`; return; }
+  b.className = "banner " + c.kind;
+  b.innerHTML = `<span class="k">COMING UP · ${esc(c.in.toUpperCase())} OF SIM TIME</span><span class="what">${esc(c.label)}${c.what ? ": " + esc(c.what) : ""}</span>
+    <span class="when">${esc(c.at)}</span><button id="skip2">Skip to it ⏭</button>`;
+  $("skip2").onclick = () => control("skip");
+}
+
 function drawFacts() {
   const e = S.focus;
   if (!e) return;
   $("ftitle").innerHTML = `${esc(e.fleet_sat)} vs ${esc(e.object_name)} <span class="sub">(${e.norad_cat_id}, ${esc(e.object_type || "")})</span> <span class="tag ${e.triage}">${e.triage}</span>` +
     (e.source.includes("SIMULATED") ? ` <span class="tag SIM">SIMULATED TRACKING</span>` : "");
-  $("range").textContent = fmtKm(e.range_km);
+  const passed = e.to_tca_s < -30;
+  $("rlabel").textContent = passed ? "Closest approach was" : "Range now";
+  $("range").textContent = passed ? `${Math.round(e.miss_m).toLocaleString()} m` : fmtKm(e.range_km);
+  $("range").className = "range" + (passed ? " passed" + (e.max_pc >= S.rules.clear_pc ? " bad" : "") : "");
   const frac = Math.max(0, Math.min(1, 1 - Math.log10(Math.max(e.range_km, 0.1) / 0.1) / 5));   // 0.1 km full, 10,000 km empty
   $("rangebar").style.width = (frac * 100).toFixed(1) + "%";
   $("rangebar").style.background = e.to_tca_s > 0 && e.to_tca_s < 600 ? "var(--escalate)" : "var(--info)";
@@ -191,7 +213,7 @@ function drawTimeline() {
     const X = x(e.t_s), y = rowY[e.triage] || 90, tracked = e.tracked;
     const col = e.triage === "ESCALATE" ? "var(--escalate)" : e.triage === "WATCH" ? "var(--watch)" : tracked ? "var(--ok)" : "var(--noise)";
     g += tracked ? `<circle cx="${X}" cy="${y}" r="7" fill="${col}" data-ev="${esc(e.key)}" style="cursor:pointer"><title>${esc(e.fleet_sat)} vs ${esc(e.object_name)} ${esc(e.tca)} ${Math.round(e.miss_m)} m</title></circle>`
-      : `<line x1="${X}" y1="${y - 5}" x2="${X}" y2="${y + 5}" stroke="${col}"/>`;
+      : `<line x1="${X}" y1="${y - 5}" x2="${X}" y2="${y + 5}" stroke="${col}" opacity=".35"/>`;
     if (e.burn) { const bx = x((Date.parse(e.burn.burn_utc) - Date.parse("2026-09-25T01:00:00Z")) / 1000); g += `<path d="M${bx - 6},${y + 14} L${bx + 6},${y + 14} L${bx},${y + 4} Z" fill="var(--ok)"><title>burn ${esc(e.burn.burn_utc)}</title></path>`; }
     if (S.focus && e.key === S.focus.key) g += `<circle cx="${X}" cy="${y}" r="11" fill="none" stroke="var(--info)" stroke-width="2"/>`;
   }
@@ -205,7 +227,7 @@ function drawTimeline() {
 async function poll() {
   try {
     S = await (await fetch("/api/state")).json();
-    drawHeader(); drawFleet(); drawPlane(); drawFacts(); drawCards(); drawTimeline();
+    drawHeader(); drawBanner(); drawFleet(); drawPlane(); drawFacts(); drawCards(); drawTimeline();
   } catch (e) { $("next").textContent = "lost the console backend: retrying"; }
   setTimeout(poll, 250);
 }

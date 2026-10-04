@@ -6,8 +6,8 @@ advance at a constant (secular) rate that SGP4 works out when it initialises an 
 those rates on the Satrec object as mdot, nodedot and argpdot, in radians per minute (mdot includes the mean
 motion itself). Moving an element set to a new epoch with those rates is most of the job, but not all of it:
 SGP4 also applies drag to the mean anomaly with terms that grow as t squared and faster, and those are not
-secular rates. Over five days that leaves the moved set a few kilometres along-track from where the original
-set says the object is. So we re-anchor: a small mean-anomaly correction that puts the moved set back on the
+secular rates. Over five days that leaves the moved set kilometres from where the original set says the object
+is. So we re-anchor: three small corrections (mean anomaly, mean motion, node) that put the moved set back on the
 original set's position at the time that matters (anchor()). THEN a fresh measurement moves the object a little:
 we simulate that as a further shift along its own track, which is how tracking updates mostly differ in practice.
 """
@@ -40,17 +40,32 @@ def shift_anomaly(rec: dict, dm_deg: float) -> dict:
     return out
 
 
-def anchor(orig: dict, moved: dict, at, span_deg=2.0):
-    """The mean-anomaly correction (degrees) that puts the moved element set where the original set says the
-    object is at time `at`, and how far apart they still are after it (metres)."""
-    from scipy.optimize import minimize_scalar
+def anchor(orig: dict, moved: dict, at):
+    """Re-anchor a moved element set to the original's prediction at time `at`.
+
+    SGP4's drag shows up mostly along-track (the mean anomaly) and as a slowly rising mean motion, with a hair
+    of node. So we fit three small corrections (mean anomaly in degrees, mean motion in rev/day, node in degrees)
+    until the moved set puts the object exactly where the original set does at `at`. Deterministic: a fixed
+    start and a least-squares solve. Returns (anchored set, the corrections, metres apart before, metres after).
+    """
+    from scipy.optimize import least_squares
     target = O.rv(O.satrec(orig), at)[0]
-    err = lambda dm: float(np.linalg.norm(O.rv(O.satrec(shift_anomaly(moved, dm)), at)[0] - target)) * 1000.0
-    grid = np.linspace(-span_deg, span_deg, 401)                  # bracket the minimum on a fixed grid first
-    g0 = float(grid[int(np.argmin([err(g) for g in grid]))])
-    step = grid[1] - grid[0]
-    r = minimize_scalar(err, bounds=(g0 - step, g0 + step), method="bounded", options={"xatol": 1e-10})
-    return float(r.x), float(r.fun)
+
+    def make(x):
+        r = shift_anomaly(moved, x[0])
+        r["MEAN_MOTION"] = float(moved["MEAN_MOTION"]) + x[1] * 1e-4
+        r["RA_OF_ASC_NODE"] = (float(moved["RA_OF_ASC_NODE"]) + x[2]) % 360
+        return r
+
+    resid = lambda x: (O.rv(O.satrec(make(x)), at)[0] - target) * 1000.0
+    before = float(np.linalg.norm(resid([0.0, 0.0, 0.0])))
+    # start from the best pure along-track shift on a fixed grid, then solve for all three
+    grid = np.linspace(-2.0, 2.0, 401)
+    g0 = float(grid[int(np.argmin([np.linalg.norm(resid([g, 0.0, 0.0])) for g in grid]))])
+    sol = least_squares(resid, [g0, 0.0, 0.0], x_scale=[0.01, 1.0, 0.01], xtol=1e-14, ftol=1e-14, gtol=1e-14)
+    x = sol.x
+    return make(x), {"mean_anomaly_deg": round(float(x[0]), 7), "mean_motion_rev_day": round(float(x[1]) * 1e-4, 9),
+                     "raan_deg": round(float(x[2]), 9)}, before, float(np.linalg.norm(sol.fun))
 
 
 def miss_with(sat, rec: dict, tca_guess, window_s=300.0):
