@@ -4,9 +4,12 @@ tracking update in the scenario (console/make_scenario.py), and by the offline t
 SGP4's mean elements change steadily with time: the mean anomaly, the node and the argument of perigee each
 advance at a constant (secular) rate that SGP4 works out when it initialises an element set. sgp4 2.27 exposes
 those rates on the Satrec object as mdot, nodedot and argpdot, in radians per minute (mdot includes the mean
-motion itself). Moving an element set to a new epoch with those rates gives what the same orbit's elements would
-say at that epoch. A fresh measurement then moves the object a little: we simulate that as a small shift along
-its own track (a change of mean anomaly), which is how tracking updates mostly differ in practice.
+motion itself). Moving an element set to a new epoch with those rates is most of the job, but not all of it:
+SGP4 also applies drag to the mean anomaly with terms that grow as t squared and faster, and those are not
+secular rates. Over five days that leaves the moved set a few kilometres along-track from where the original
+set says the object is. So we re-anchor: a small mean-anomaly correction that puts the moved set back on the
+original set's position at the time that matters (anchor()). THEN a fresh measurement moves the object a little:
+we simulate that as a further shift along its own track, which is how tracking updates mostly differ in practice.
 """
 import math
 from datetime import datetime
@@ -35,6 +38,19 @@ def shift_anomaly(rec: dict, dm_deg: float) -> dict:
     out = dict(rec)
     out["MEAN_ANOMALY"] = (float(rec["MEAN_ANOMALY"]) + dm_deg) % 360
     return out
+
+
+def anchor(orig: dict, moved: dict, at, span_deg=2.0):
+    """The mean-anomaly correction (degrees) that puts the moved element set where the original set says the
+    object is at time `at`, and how far apart they still are after it (metres)."""
+    from scipy.optimize import minimize_scalar
+    target = O.rv(O.satrec(orig), at)[0]
+    err = lambda dm: float(np.linalg.norm(O.rv(O.satrec(shift_anomaly(moved, dm)), at)[0] - target)) * 1000.0
+    grid = np.linspace(-span_deg, span_deg, 401)                  # bracket the minimum on a fixed grid first
+    g0 = float(grid[int(np.argmin([err(g) for g in grid]))])
+    step = grid[1] - grid[0]
+    r = minimize_scalar(err, bounds=(g0 - step, g0 + step), method="bounded", options={"xatol": 1e-10})
+    return float(r.x), float(r.fun)
 
 
 def miss_with(sat, rec: dict, tca_guess, window_s=300.0):

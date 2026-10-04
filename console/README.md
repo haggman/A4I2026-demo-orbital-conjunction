@@ -20,8 +20,8 @@ The physics stays in deterministic tools. The agent runs the playbook around the
 
 ## The watcher's rules
 
-- At the start: one card for the week; "too late to act" for anything under 30 minutes away; "fresh tracking
-  requested" for anything whose elements will be over 5 days old at closest approach.
+- At the start: one card for the week; "too late to act" for anything under 30 minutes away; one "fresh tracking
+  requested" card listing everything whose elements will be over 5 days old at closest approach.
 - **ESCALATE** (worst-case Pc ≥ 1e-4) on fresh tracking: wake the agent 18 hours before closest approach.
 - A tracking update arrives: recompute, card, and wake the agent to re-assess.
 - An approved burn executes at its time; every approach we were tracking gets a card as it passes.
@@ -30,8 +30,9 @@ The physics stays in deterministic tools. The agent runs the playbook around the
 ## The one thing that is simulated
 
 The snapshot has no future, so moment B's fresh tracking on Tuesday is made by `make_scenario.py` from the
-snapshot's own elements: moved to the new epoch with SGP4's secular rates (which alone changes nothing: the script
-checks the miss comes back unchanged), then shifted along the object's own track to a stated target miss. It is
+snapshot's own elements: moved to the new epoch with SGP4's secular rates and re-anchored to where the original
+elements put the object (SGP4's drag terms are not secular, so the move alone drifts a few km; the script checks
+the miss comes back at the snapshot's value), then shifted along the object's own track to a stated target miss. It is
 labelled SIMULATED on every card and in the agent's instructions.
 
 ## Run it

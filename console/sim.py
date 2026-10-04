@@ -214,6 +214,7 @@ class Sim:
             f"{n['ESCALATE']} ESCALATE (worst-case Pc at or above {self.rules['escalate_pc']:.0e}), {n['WATCH']} WATCH "
             f"(under {self.rules['watch_m']:,.0f} m), {n['NOISE']} noise.",
             f"Snapshot {self.sc.get('snapshot')}: fixed for this demo, so every run is the same."], "info")}]
+        stale = []
         for e in evs:
             if not e["tracked"]:
                 continue
@@ -224,11 +225,13 @@ class Sim:
                     f"We cannot plan, command and execute a burn in under {self.rules['act_limit_min']:.0f} minutes. Logged; watching the pass."],
                     "watch", e["key"])})
             elif e["stale"]:
-                acts.append({"card": self.card("watcher", f"Fresh tracking requested: {self._describe(e)}", [
-                    f"Closest approach {fmt(e['tca'])}: {e['miss_m']:,.1f} m, {e['triage']}.",
-                    f"The object's elements will be {e['age_days']:.2f} days old at closest approach (stale beyond "
-                    f"{self.rules['stale_days']:.0f}). Nothing to decide on old tracking: fresh elements requested."],
-                    "watch", e["key"])})
+                stale.append(e)
+        if stale:                                # one card for all of them: the room reads one, not five
+            acts.append({"card": self.card("watcher", f"Fresh tracking requested: {len(stale)} approach{'es' if len(stale) > 1 else ''} on stale elements", [
+                f"Their elements will be more than {self.rules['stale_days']:.0f} days old at closest approach. "
+                "Nothing to decide on old tracking: fresh elements requested for each."] + [
+                f"{e['fleet_sat']} vs {e['object_name']} ({e['norad_cat_id']}): {fmt(e['tca'])}, {e['miss_m']:,.1f} m, "
+                f"elements {e['age_days']:.2f} days old" for e in stale], "watch", stale[0]["key"])})
         return acts
 
     def _on_decide(self, key):
