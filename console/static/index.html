@@ -40,7 +40,11 @@
     <div id="banner" class="banner"></div>
     <h2 id="ftitle">Encounter</h2>
     <div class="focus-grid">
-      <svg id="plane" viewBox="-230 -230 460 460" aria-label="Encounter plane"></svg>
+      <div class="flywrap">
+        <svg id="flyby" viewBox="0 0 760 380" aria-label="Fly-by: the other object passing us"></svg>
+        <div class="caption">The other object moves left to right with the clock. Its height is how far it will miss us.
+          The last seconds are stretched to fill the picture.</div>
+      </div>
       <div class="facts">
         <div class="gauge">
           <div id="rlabel" class="label">Range now</div>
@@ -48,8 +52,9 @@
           <div class="bar"><div id="rangebar"></div></div>
           <div id="countdown" class="sub">—</div>
         </div>
+        <div class="tgtwrap"><svg id="plane" viewBox="-170 -170 340 340" aria-label="Where it passes, seen head-on"></svg>
+          <div class="caption">Head-on: where it passes us. Rings at 303 m, 1 km and 3,033 m.</div></div>
         <dl id="facts"></dl>
-        <div class="caption">The picture: where the other object passes us at closest approach, looking along the line it comes in on. We are the square. Inside the red ring: escalate. Outside the green ring: clear.</div>
       </div>
     </div>
   </section>

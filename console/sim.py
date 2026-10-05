@@ -236,7 +236,7 @@ class Sim:
                 f"Their elements will be more than {self.rules['stale_days']:.0f} days old at closest approach. "
                 "Nothing to decide on old tracking: fresh elements requested for each."] + [
                 f"{e['fleet_sat']} vs {e['object_name']} ({e['norad_cat_id']}): {fmt(e['tca'])}, {e['miss_m']:,.1f} m, "
-                f"elements {e['age_days']:.2f} days old" for e in stale], "watch", stale[0]["key"])})
+                f"elements {e['age_days']:.2f} days old" for e in stale], "watch", None)})
         return acts
 
     def _on_decide(self, key):
@@ -253,7 +253,7 @@ class Sim:
         u = self.sc["tracking_updates"][int(idx)]
         key = self._key(u["fleet_sat"], u["norad_cat_id"])
         e = self.events[key]
-        before = {k: e[k] for k in ("miss_m", "max_pc", "triage", "age_days", "stale")}
+        before = {k: e[k] for k in ("miss_m", "max_pc", "triage", "age_days", "stale", "plane_m")}
         self.overrides[int(u["norad_cat_id"])] = u["omm"]
         r = u["result"]
         e.update(tca=O.utc(r["tca_utc"]), miss_m=r["miss_m"], radial_m=r["radial_m"], in_track_m=r["in_track_m"],
@@ -413,11 +413,83 @@ class Sim:
         v.update(tca_utc=O.iso(e["tca"], "milliseconds"), tca=fmt(e["tca"]), t_s=self._s(e["tca"]))
         if e.get("before_burn"):
             v["plane_before_m"] = e["before_burn"]["plane_m"]
+            v["before_burn"] = e["before_burn"]
         if e.get("before"):
             v["before"] = e["before"]
         if e["key"] in self.burns:
             v["burn"] = self.burns[e["key"]]
         return v
+
+    def state(self) -> dict:
+        self._auto_focus()
+        now = self.now()
+        f = self.events.get(self.focus) if self.focus else None
+        nt = next((x for x in self.triggers() if x[0] > self.t), None)
+        return {
+            "now_utc": O.iso(now), "now": fmt(now), "t_s": self.t, "end_s": self.t_end_s, "playing": self.playing,
+            "speed_i": self.speed_i, "speeds": self.speeds, "waiting": self.waiting["id"] if self.waiting else None,
+            "rules": self.rules, "snapshot": self.sc.get("snapshot"),
+            "next": {"kind": nt[1], "at": fmt(self.at(nt[0])), "in": span(nt[0] - self.t)} if nt else None,
+            "coming_up": self.coming_up(),
+            "fleet": self.fleet_board(),
+            "events": [self.event_view(e) for e in sorted(self.events.values(), key=lambda e: e["tca"])],
+            "focus": dict(self.event_view(f), range_km=round(self.range_km(f), 3),
+                          to_tca_s=(f["tca"] - now).total_seconds()) if f else None,
+            "cards": self.cards,
+        }
+
+    # controls
+    def play(self, on: bool):
+        if not self.waiting:
+            self.playing = on
+
+    def set_speed(self, i: int):
+        self.speed_i = max(0, min(len(self.speeds) - 1, int(i)))
+
+    def set_focus(self, key):
+        if key in self.events:
+            self.focus = key
+            self.manual_focus = True             # the operator chose it: hold it until the next card
+
+    LABELS = {"decide": "Agent decision", "pass": "Closest approach", "update": "Fresh tracking arrives",
+              "burn": "Burn", "start": "Start"}
+
+    def _trigger_event(self, trig):
+        kind, key = trig[1], trig[2]
+        if kind == "update":
+            u = self.sc["tracking_updates"][int(key)]
+            return self._key(u["fleet_sat"], u["norad_cat_id"])
+        return key if key in self.events else None
+
+    def coming_up(self):
+        """What the next trigger is, in words, for the banner."""
+        nt = next((x for x in self.triggers() if x[0] > self.t), None)
+        if nt is None:
+            return None
+        k = self._trigger_event(nt)
+        e = self.events.get(k) if k else None
+        return {"kind": nt[1], "label": self.LABELS.get(nt[1], nt[1]), "at": fmt(self.at(nt[0])),
+                "in": span(nt[0] - self.t), "in_s": nt[0] - self.t, "event": k,
+                "what": self._describe(e) if e else ""}
+
+    def _auto_focus(self):
+        """The screen follows the story. While the agent works: its approach. In the run-in to the next thing
+        (90 s of sim time or less): that thing. Otherwise: the approach the latest card was about, until it is
+        two minutes past; then whatever comes next."""
+        if self.waiting:
+            self.focus = self.waiting["event"]
+            return
+        if self.manual_focus:
+            return
+        nt = next((x for x in self.triggers() if x[0] > self.t and self._trigger_event(x)), None)
+        if nt and nt[0] - self.t <= 90:
+            self.focus = self._trigger_event(nt)
+            return
+        last = next((c["event"] for c in reversed(self.cards) if c.get("event") in self.events), None)
+        if last and (self.now() - self.events[last]["tca"]).total_seconds() <= 120:
+            self.focus = last
+        elif nt:
+            self.focus = self._trigger_event(nt)
 
     def state(self) -> dict:
         self._auto_focus()

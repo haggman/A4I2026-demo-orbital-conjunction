@@ -69,46 +69,83 @@ function drawFleet() {
   $("fleet").querySelectorAll(".sat").forEach((d) => (d.onclick = () => d.dataset.ev && control("focus", d.dataset.ev)));
 }
 
-function pt(p) {                             // encounter-plane metres -> SVG: sideways to the right, radial up
-  let x = p[1], y = -p[0];
-  const r = Math.hypot(x, y), k = r > R_MAX ? R_MAX / r : 1;
-  return [(x * k * PX) / R_MAX, (y * k * PX) / R_MAX, r > R_MAX];
-}
-function drawPlane() {
-  const e = S.focus, r = S.rules;
-  if (!e) { $("plane").innerHTML = ""; return; }
-  const hbr = r.hbr_m, lines = [
-    { m: hbr / Math.sqrt(Math.E * r.escalate_pc), c: "var(--escalate)", t: "escalate" },
-    { m: r.watch_m, c: "var(--watch)", t: "watch" },
-    { m: hbr / Math.sqrt(Math.E * r.clear_pc), c: "var(--ok)", t: "clear" }];
-  let g = `<circle r="${PX}" fill="none" stroke="var(--line)"/>`;
-  g += `<line x1="-${PX}" y1="0" x2="${PX}" y2="0" stroke="var(--line)"/><line x1="0" y1="-${PX}" x2="0" y2="${PX}" stroke="var(--line)"/>`;
-  for (const l of lines) {
-    const rr = (l.m * PX) / R_MAX;
-    g += `<circle r="${rr}" fill="none" stroke="${l.c}" stroke-width="2" stroke-dasharray="${l.t === "clear" ? "0" : "5 4"}"/>`;
-    g += `<text x="0" y="${rr + 14}" text-anchor="middle" class="halo" style="fill:${l.c}">${l.t} ${Math.round(l.m).toLocaleString()} m</text>`;
+// ---------- the pictures share one distance scale: square root, so 303 m, 1 km and 3 km are spread evenly
+const D_MAX = 4200;
+const SC = (m) => Math.sqrt(Math.min(Math.max(m, 0), D_MAX) / D_MAX);
+const zoneCol = (m) => m < 303.3 ? "var(--escalate)" : m < 1000 ? "var(--watch)" : m < 3033 ? "var(--muted)" : "var(--ok)";
+const fmtM = (m) => `${Math.round(m).toLocaleString()} m`;
+
+function drawFlyby() {
+  const e = S.focus, svg = $("flyby");
+  if (!e) { svg.innerHTML = ""; return; }
+  const box = svg.getBoundingClientRect();                      // draw in real pixels, so text stays text-sized
+  const W = Math.max(420, Math.round(box.width)), H = Math.max(260, Math.round(box.height));
+  svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
+  const L = 120, R = 16, T = 12, B = 40, pw = W - L - R, ph = H - T - B;
+  const TW = 600, K = 15;                                         // ±10 minutes shown; stretched near closest approach
+  const y = (m) => T + ph * (1 - SC(m));
+  const X = (dt) => L + pw * (0.5 + 0.5 * Math.asinh(Math.max(-TW, Math.min(TW, dt)) / K) / Math.asinh(TW / K));
+  let g = "";
+  // the zones, named in the left margin so nothing in the picture can land on top of them
+  const bands = [[0, 303.3, "var(--escalate)", "ESCALATE", "risk > 1 in 10,000", .16],
+                 [303.3, 1000, "var(--watch)", "WATCH", "under 1 km", .16],
+                 [1000, 3033, "var(--line)", "", "", .25],
+                 [3033, D_MAX, "var(--ok)", "CLEAR", "risk < 1 in a million", .16]];
+  for (const [a, b, c, t, t2, o] of bands) {
+    g += `<rect x="${L}" y="${y(b)}" width="${pw}" height="${y(a) - y(b)}" fill="${c}" opacity="${o}"/>`;
+    if (t) {
+      const cy = (y(a) + y(b)) / 2;
+      g += `<text x="4" y="${cy}" style="fill:${c};font-weight:800;font-size:14px">${t}</text>`;
+      g += `<text x="4" y="${cy + 15}" style="fill:${c};font-size:11px">${t2}</text>`;
+    }
   }
-  g += `<text x="${PX - 4}" y="16" text-anchor="end" class="muted halo">sideways →</text><text x="6" y="${-PX + 14}" class="muted">↑ up (radial)</text>`;
-  g += `<rect x="-6" y="-6" width="12" height="12" fill="var(--info)"/>`;
-  const objRight = e.plane_m ? pt(e.plane_m)[0] > 0 : true;      // put our label on the other side from theirs
-  g += `<text x="${objRight ? -12 : 12}" y="22" text-anchor="${objRight ? "end" : "start"}" class="muted halo">${esc(e.fleet_sat)} (us)</text>`;
-  if (e.plane_before_m) {
-    const [bx, by] = pt(e.plane_before_m), [ax, ay] = pt(e.plane_m);
-    g += `<circle cx="${bx}" cy="${by}" r="6" fill="none" stroke="var(--muted)" stroke-width="2"/><text x="${bx + 9}" y="${by + 4}" class="muted halo">before</text>`;
-    g += `<line x1="${bx}" y1="${by}" x2="${ax}" y2="${ay}" stroke="var(--ok)" stroke-width="2" stroke-dasharray="4 3"/>`;
+  for (const m of [303, 1000, 3033]) g += `<line x1="${L}" x2="${L + pw}" y1="${y(m)}" y2="${y(m)}" stroke="var(--muted)" stroke-dasharray="3 4" opacity=".5"/><text x="${L - 6}" y="${y(m) + 4}" text-anchor="end" class="muted" style="font-size:11px">${m.toLocaleString()}</text>`;
+  g += `<text x="${L - 6}" y="${y(0) + 4}" text-anchor="end" class="muted" style="font-size:11px">0 m</text>`;
+  for (const [dt, l] of [[-600, "−10 min"], [-60, "−1 min"], [0, "closest approach"], [60, "+1 min"], [600, "+10 min"]])
+    g += `<line x1="${X(dt)}" x2="${X(dt)}" y1="${T}" y2="${T + ph}" stroke="var(--line)"/><text x="${X(dt)}" y="${T + ph + 18}" text-anchor="middle" class="muted">${l}</text>`;
+  // the other tracks: what it would have been, or what it will be
+  const ghost = (m, txt, col, dash) => {
+    g += `<line x1="${L}" x2="${L + pw}" y1="${y(m)}" y2="${y(m)}" stroke="${col}" stroke-width="3" stroke-dasharray="${dash}" opacity=".85"/>`;
+    g += `<text x="${L + pw - 8}" y="${y(m) + (m < 600 ? 18 : -8)}" text-anchor="end" class="halo" style="fill:${col};font-weight:700;font-size:14px">${txt}</text>`;
+  };
+  if (e.before_burn) ghost(e.before_burn.miss_m, `without the burn: ${fmtM(e.before_burn.miss_m)}`, zoneCol(e.before_burn.miss_m), "8 6");
+  if (e.before) ghost(e.before.miss_m, `on the old tracking: ${fmtM(e.before.miss_m)}`, zoneCol(e.before.miss_m), "8 6");
+  if (e.burn && e.burn.status === "scheduled") ghost(e.burn.miss_after_m, `after the burn (scheduled): ${fmtM(e.burn.miss_after_m)}`, "var(--ok)", "2 5");
+  // us
+  g += `<rect x="${X(0) - 9}" y="${y(0) - 9}" width="18" height="18" fill="var(--info)"/><text x="${X(0) + 14}" y="${y(0) - 6}" style="font-weight:700">${esc(e.fleet_sat)} (us)</text>`;
+  // the object, on its current track
+  const dt = -e.to_tca_s, col = zoneCol(e.miss_m), oy = y(e.miss_m), ox = X(dt);
+  g += `<line x1="${L}" x2="${ox}" y1="${oy}" y2="${oy}" stroke="${col}" stroke-width="3"/><line x1="${ox}" x2="${L + pw}" y1="${oy}" y2="${oy}" stroke="${col}" stroke-width="2" stroke-dasharray="2 5"/>`;
+  g += `<line x1="${X(0)}" x2="${X(0)}" y1="${oy}" y2="${y(0) - 12}" stroke="${col}" stroke-width="2"/>`;
+  g += `<text x="${X(0) + 10}" y="${Math.min(y(0) - 24, oy + 26)}" class="halo" style="fill:${col};font-weight:700;font-size:17px">${dt < 0 ? "will miss by" : "missed by"} ${fmtM(e.miss_m)}</text>`;
+  const far = Math.abs(dt) > TW;
+  g += `<circle cx="${ox}" cy="${oy}" r="11" fill="${col}"/>`;
+  const where = far ? (dt < 0 ? `closest approach ${span(e.to_tca_s)}` : "passed") : `${fmtKm(e.range_km)} away · ${e.rel_speed_km_s.toFixed(1)} km/s`;
+  const lx = Math.max(L + 8, Math.min(L + pw - 8, ox)), anchor = ox > L + pw * .6 ? "end" : ox < L + pw * .25 ? "start" : "middle";
+  g += `<text x="${lx}" y="${oy > T + 40 ? oy - 18 : oy + 30}" text-anchor="${anchor}" class="halo" style="font-weight:700;font-size:15px">${esc(e.object_name)} · ${where}</text>`;
+  svg.innerHTML = g;
+}
+
+function drawPlane() {                          // the small head-on view: same scale, zones shaded
+  const e = S.focus, svg = $("plane");
+  if (!e) { svg.innerHTML = ""; return; }
+  const P = 150, r = (m) => P * SC(m);
+  const pt = (p) => { const m = Math.hypot(p[0], p[1]), k = m ? r(m) / m : 0; return [p[1] * k, -p[0] * k]; };   // sideways right, radial up
+  let g = `<circle r="${P}" fill="var(--ok)" opacity=".14"/><circle r="${r(3033)}" fill="var(--panel)"/><circle r="${r(3033)}" fill="var(--line)" opacity=".3"/>`;
+  g += `<circle r="${r(1000)}" fill="var(--watch)" opacity=".22"/><circle r="${r(303.3)}" fill="var(--escalate)" opacity=".35"/>`;
+  for (const [m, c] of [[303.3, "var(--escalate)"], [1000, "var(--watch)"], [3033, "var(--ok)"]]) g += `<circle r="${r(m)}" fill="none" stroke="${c}" stroke-width="2"/>`;
+  g += `<rect x="-7" y="-7" width="14" height="14" fill="var(--info)"/>`;
+  const before = e.plane_before_m || (e.before && e.before.plane_m);
+  if (before && e.plane_m) {
+    const [bx, by] = pt(before), [ax, ay] = pt(e.plane_m);
+    g += `<circle cx="${bx}" cy="${by}" r="9" fill="none" stroke="${zoneCol(Math.hypot(...before))}" stroke-width="3"/><line x1="${bx}" y1="${by}" x2="${ax}" y2="${ay}" stroke="var(--ok)" stroke-width="3" stroke-dasharray="5 4"/>`;
   }
   if (e.burn && e.burn.status === "scheduled" && e.burn.plane_after_m) {
     const [px, py] = pt(e.burn.plane_after_m);
-    g += `<circle cx="${px}" cy="${py}" r="8" fill="none" stroke="var(--ok)" stroke-width="2" stroke-dasharray="3 3"/><text x="${px + 11}" y="${py + 4}" style="fill:var(--ok)">after the burn (scheduled)</text>`;
+    g += `<circle cx="${px}" cy="${py}" r="11" fill="none" stroke="var(--ok)" stroke-width="3" stroke-dasharray="3 3"/>`;
   }
-  if (e.plane_m) {
-    const [x, y, out] = pt(e.plane_m);
-    const col = e.triage === "ESCALATE" ? "var(--escalate)" : e.triage === "WATCH" ? "var(--watch)" : e.triage === "NOISE" ? "var(--noise)" : "var(--ok)";
-    const below = y < -PX + 30;
-    g += `<circle cx="${x}" cy="${y}" r="9" fill="${col}"/><text x="${Math.max(-PX + 100, Math.min(PX - 100, x))}" y="${below ? y + 26 : y - 15}" text-anchor="middle" class="halo" style="font-weight:700;font-size:14px">${esc(e.object_name)} ${Math.round(e.miss_m).toLocaleString()} m${out ? " (off scale)" : ""}</text>`;
-  }
-  $("plane").setAttribute("viewBox", `-${PX + 24} -${PX + 12} ${2 * PX + 48} ${2 * PX + 48}`);
-  $("plane").innerHTML = g;
+  if (e.plane_m) { const [x, y] = pt(e.plane_m); g += `<circle cx="${x}" cy="${y}" r="12" fill="${zoneCol(e.miss_m)}"/>`; }
+  svg.innerHTML = g;
 }
 
 function drawBanner() {
@@ -227,7 +264,7 @@ function drawTimeline() {
 async function poll() {
   try {
     S = await (await fetch("/api/state")).json();
-    drawHeader(); drawBanner(); drawFleet(); drawPlane(); drawFacts(); drawCards(); drawTimeline();
+    drawHeader(); drawBanner(); drawFleet(); drawFlyby(); drawPlane(); drawFacts(); drawCards(); drawTimeline();
   } catch (e) { $("next").textContent = "lost the console backend: retrying"; }
   setTimeout(poll, 250);
 }
