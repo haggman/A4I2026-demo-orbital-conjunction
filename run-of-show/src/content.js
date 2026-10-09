@@ -13,15 +13,34 @@ const PACK = {
   filesNote: "Everything runs from one Cloud Shell started with bash scripts/start_demo.sh.",
   fictionNote: "Cymbal Orbital and its twelve satellites are fictional. Everything they could hit is real: U.S. Space Command, via Space-Track.org.",
   docs: { teleprompter: "TELEPROMPTER - A4I kickoff demo.docx", guide: "PLANNING GUIDE - A4I kickoff demo.docx" },
-  sessions: [
-    { id: 1, label: "KICKOFF", before: [
-      "Cloud Shell, repo root:  bash scripts/start_demo.sh   → ends with \"Ready\" and both ports ✓",
-      "Tab 1: GitHub ▸ haggman/A4I2026-demo-orbital-conjunction (the README)",
-      "Tab 2: Colab Enterprise ▸ demo_01_load_explore.ipynb, run this morning (Runtime ▸ Run all)",
-      "Tab 3: Web Preview ▸ Change port ▸ 8000 (ADK web UI) ▸ cymbal_ops ▸ new session",
-      "Tab 4: Google Cloud console ▸ Cloud Run ▸ cymbal-ops",
-      "Tab 5: Web Preview ▸ Change port ▸ 8080 (console): header says REPLAY, clock Fri 25 Sep 01:00:00 UTC",
+  sessions: [{ id: 1, label: "" }],
+  // BEFORE THE SHOW: full pages at the front of the teleprompter, in the order you do them.
+  interludes: [
+    { before: "card", title: "BEFORE THE SHOW · 1 · ONCE PER PROJECT", steps: [
+      { tag: "SHELL", label: "CLOUD SHELL · a fresh project · about 10 minutes", text: "git clone https://github.com/haggman/A4I2026-demo-orbital-conjunction.git\ncd A4I2026-demo-orbital-conjunction\nbash scripts/build_demo.sh",
+        expect: "Data loads (850 conjunctions) · sandbox created · smoke test: 7 checks PASS · Cloud Run deploys cymbal-ops · Ready." },
+      { tag: "DO", label: "COLAB ENTERPRISE · about 3 minutes", text: "Import notebooks/demo_01_load_explore.ipynb from the repo ▸ Runtime ▸ Run all",
+        expect: "Section 10: 850 approaches. Section 11: every check PASS. Keep this tab: it's step 2." },
+    ], note: "Once per Google Cloud project. A new Google Skills lab is a new project: start here again." },
+    { before: "card", title: "BEFORE THE SHOW · 2 · THE REHEARSAL RECORDING", steps: [
+      { tag: "SHELL", label: "CLOUD SHELL · skip this page if console/recordings/rehearsal.json is already in the repo", text: "source scripts/activate.sh\npython console/data.py\nuvicorn console.app:app --port 8080",
+        expect: "Web Preview ▸ Change port ▸ 8080. Header says LIVE AGENT." },
+      { tag: "DO", label: "IN THE CONSOLE · live Gemini", text: "Skip to next until the CYMBAL-04 card ▸ wait for YOUR CALL ▸ Approve\nSkip to next until Tuesday's card ▸ wait for YOUR CALL ▸ Approve",
+        expect: "CYMBAL-04: MANEUVER at 04:00. Tuesday: no burn." },
+      { tag: "SHELL", label: "CLOUD SHELL · stop uvicorn first (Ctrl+C in its terminal)", text: "python console/keep_recording.py",
+        expect: "Kept run-… → console/recordings/rehearsal.json · replayed the week twice: identical. If it says NOT KEPT, it says why: rehearse again." },
+      { tag: "DO", label: "KEEP IT", text: "Commit and push console/recordings/rehearsal.json\n(or ⋯ More ▸ Download it and commit it from your Mac)" },
+    ], note: "The console replays this run in the show, so it behaves the same every time. Once it's committed, every later project reuses it." },
+    { before: "card", title: "BEFORE THE SHOW · 3 · MORNING OF", steps: [
+      { tag: "SHELL", label: "CLOUD SHELL · repo root · the start block", text: "bash scripts/start_demo.sh",
+        expect: "Sandbox ✓ · model check · port 8000 ✓ · port 8080 ✓ · console: replay rehearsal · Ready." },
+      { tag: "DO", label: "READ THE MODEL CHECK", text: "Default model quick (a few seconds) → steps 3–4 run live as written.\nSlow → still run them; use each step's IF IT GOES WRONG line. The console is a replay either way." },
+      { tag: "DO", label: "COLAB ENTERPRISE", text: "Notebook outputs still there? If the runtime was recycled: Runtime ▸ Run all (3 minutes)." },
     ] },
+    { before: "card", title: "BEFORE THE SHOW · 4 · OPEN THE FIVE TABS", steps: [
+      { tag: "DO", label: "IN THIS ORDER, LEFT TO RIGHT", text: "1  GitHub ▸ haggman/A4I2026-demo-orbital-conjunction (the README)\n2  Colab Enterprise ▸ demo_01_load_explore.ipynb\n3  Web Preview ▸ Change port ▸ 8000 ▸ cymbal_ops ▸ new session\n4  Google Cloud console ▸ Cloud Run ▸ cymbal-ops\n5  Web Preview ▸ Change port ▸ 8080",
+        expect: "Tab 5: header says REPLAY, clock Fri 25 Sep 01:00:00 UTC, three watcher cards on the desk." },
+    ], note: "Stop both web apps afterwards with: bash scripts/start_demo.sh --stop" },
   ],
   tags: {
     SHELL: { label: "CLOUD SHELL" },

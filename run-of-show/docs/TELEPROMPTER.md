@@ -4,8 +4,6 @@ A live demo, no deck: one step per page, and the tab to be on is the first thing
 
 → marks what a good result looks like.
 
-## KICKOFF
-
 | # | Tab | Time | Block |
 |---|---|---|---|
 | 1 | GitHub · the demo repo | 0.5 min | [The challenge: which of these warnings is real?](#b1) |
@@ -18,14 +16,98 @@ A live demo, no deck: one step per page, and the tab to be on is the first thing
 
 ---
 
-## Before kickoff
+## BEFORE THE SHOW · 1 · ONCE PER PROJECT
 
-- [ ] Cloud Shell, repo root:  bash scripts/start_demo.sh   → ends with "Ready" and both ports ✓
-- [ ] Tab 1: GitHub ▸ haggman/A4I2026-demo-orbital-conjunction (the README)
-- [ ] Tab 2: Colab Enterprise ▸ demo_01_load_explore.ipynb, run this morning (Runtime ▸ Run all)
-- [ ] Tab 3: Web Preview ▸ Change port ▸ 8000 (ADK web UI) ▸ cymbal_ops ▸ new session
-- [ ] Tab 4: Google Cloud console ▸ Cloud Run ▸ cymbal-ops
-- [ ] Tab 5: Web Preview ▸ Change port ▸ 8080 (console): header says REPLAY, clock Fri 25 Sep 01:00:00 UTC
+**CLOUD SHELL · a fresh project · about 10 minutes**
+
+```text
+git clone https://github.com/haggman/A4I2026-demo-orbital-conjunction.git
+cd A4I2026-demo-orbital-conjunction
+bash scripts/build_demo.sh
+```
+
+→ *Data loads (850 conjunctions) · sandbox created · smoke test: 7 checks PASS · Cloud Run deploys cymbal-ops · Ready.*
+
+**COLAB ENTERPRISE · about 3 minutes**
+
+Import notebooks/demo_01_load_explore.ipynb from the repo ▸ Runtime ▸ Run all
+
+→ *Section 10: 850 approaches. Section 11: every check PASS. Keep this tab: it's step 2.*
+
+Once per Google Cloud project. A new Google Skills lab is a new project: start here again.
+
+---
+
+## BEFORE THE SHOW · 2 · THE REHEARSAL RECORDING
+
+**CLOUD SHELL · skip this page if console/recordings/rehearsal.json is already in the repo**
+
+```text
+source scripts/activate.sh
+python console/data.py
+uvicorn console.app:app --port 8080
+```
+
+→ *Web Preview ▸ Change port ▸ 8080. Header says LIVE AGENT.*
+
+**IN THE CONSOLE · live Gemini**
+
+Skip to next until the CYMBAL-04 card ▸ wait for YOUR CALL ▸ Approve  
+Skip to next until Tuesday's card ▸ wait for YOUR CALL ▸ Approve
+
+→ *CYMBAL-04: MANEUVER at 04:00. Tuesday: no burn.*
+
+**CLOUD SHELL · stop uvicorn first (Ctrl+C in its terminal)**
+
+```text
+python console/keep_recording.py
+```
+
+→ *Kept run-… → console/recordings/rehearsal.json · replayed the week twice: identical. If it says NOT KEPT, it says why: rehearse again.*
+
+**KEEP IT**
+
+Commit and push console/recordings/rehearsal.json  
+(or ⋯ More ▸ Download it and commit it from your Mac)
+
+The console replays this run in the show, so it behaves the same every time. Once it's committed, every later project reuses it.
+
+---
+
+## BEFORE THE SHOW · 3 · MORNING OF
+
+**CLOUD SHELL · repo root · the start block**
+
+```text
+bash scripts/start_demo.sh
+```
+
+→ *Sandbox ✓ · model check · port 8000 ✓ · port 8080 ✓ · console: replay rehearsal · Ready.*
+
+**READ THE MODEL CHECK**
+
+Default model quick (a few seconds) → steps 3–4 run live as written.  
+Slow → still run them; use each step's IF IT GOES WRONG line. The console is a replay either way.
+
+**COLAB ENTERPRISE**
+
+Notebook outputs still there? If the runtime was recycled: Runtime ▸ Run all (3 minutes).
+
+---
+
+## BEFORE THE SHOW · 4 · OPEN THE FIVE TABS
+
+**IN THIS ORDER, LEFT TO RIGHT**
+
+1  GitHub ▸ haggman/A4I2026-demo-orbital-conjunction (the README)  
+2  Colab Enterprise ▸ demo_01_load_explore.ipynb  
+3  Web Preview ▸ Change port ▸ 8000 ▸ cymbal_ops ▸ new session  
+4  Google Cloud console ▸ Cloud Run ▸ cymbal-ops  
+5  Web Preview ▸ Change port ▸ 8080
+
+→ *Tab 5: header says REPLAY, clock Fri 25 Sep 01:00:00 UTC, three watcher cards on the desk.*
+
+Stop both web apps afterwards with: bash scripts/start_demo.sh --stop
 
 ---
 
