@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Rebuild everything generated in this pack from src/ (run from anywhere):  bash src/build.sh
 #   1. any data generators:  src/make_*.py  (optional, run in name order)
-#   2. docs/: the Word teleprompter, the Markdown teleprompter, the planning guide (all from src/content.js)
+#   2. docs/: the teleprompter and the planning guide, each as Word and as Markdown (all from src/content.js)
 #   3. the pack zip, if PACK.zip is set in content.js
 # Needs node + the docx package (npm install, once). Generators bring their own needs (requirements-dev.txt).
 set -euo pipefail
@@ -24,6 +24,7 @@ PG=$(node -e 'console.log(require("./src/content").PACK.docs.guide)')
 node src/teleprompter.js "docs/$TP"
 node src/teleprompter_md.js docs/TELEPROMPTER.md
 node src/guide.js "docs/$PG"
+node src/guide_md.js docs/PLANNING-GUIDE.md
 
 ZIP=$(node -e 'const z=require("./src/content").PACK.zip; console.log(z ? z.name : "")')
 if [ -n "$ZIP" ]; then
@@ -34,4 +35,4 @@ if [ -n "$ZIP" ]; then
 fi
 find . -name __pycache__ -not -path './node_modules/*' -prune -exec rm -rf {} + 2>/dev/null || true
 [ -n "$LOCKS" ] && { echo "!! Reminder: a Word document was open during this build. Close it and rebuild."; exit 2; }
-echo "built: docs/$TP · docs/TELEPROMPTER.md · docs/$PG"
+echo "built: docs/$TP · docs/TELEPROMPTER.md · docs/$PG · docs/PLANNING-GUIDE.md"

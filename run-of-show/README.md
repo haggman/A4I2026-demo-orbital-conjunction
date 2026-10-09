@@ -7,11 +7,12 @@ borrow anything in it.
 
 | File | What it is |
 |---|---|
-| [`docs/TELEPROMPTER.md`](docs/TELEPROMPTER.md) | One step per page: the tab to be on, what to click, what to type, what a good result looks like |
+| [`docs/TELEPROMPTER.md`](docs/TELEPROMPTER.md) | Before the show (setup, the recording, morning of, the tabs), then one step per page: the tab to be on, what to click, what to type, what a good result looks like |
 | `docs/TELEPROMPTER - A4I kickoff demo.docx` | The same, for a second monitor |
-| `docs/PLANNING GUIDE - A4I kickoff demo.docx` | The night-before document: how it works, setup, the talk track, a fact sheet |
+| [`docs/PLANNING-GUIDE.md`](docs/PLANNING-GUIDE.md) | The night-before document: how it works, setup, the talk track, a fact sheet |
+| `docs/PLANNING GUIDE - A4I kickoff demo.docx` | The same, in Word |
 | [`PLAN.md`](PLAN.md) | Why the demo is shaped this way, and the decisions behind it |
-| `src/content.js` | The one source all three documents are built from |
+| `src/content.js` | The one source all four documents are built from |
 
 ## Run it
 
