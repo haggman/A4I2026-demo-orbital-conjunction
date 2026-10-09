@@ -168,13 +168,14 @@ class Sim:
 
     def skip_to_next(self) -> dict | None:
         """Jump to just before the next thing that matters, and slow down so the room sees it happen:
-        a pass at 1x through its last 90 seconds (15 for passes outside the story); anything else a minute early
+        a pass at 1x through its last 20 seconds (10 for passes outside the story); anything else a minute early
         at 1 min/s. If we are already
         inside that lead-in, go on to the thing after it. Nothing is skipped over: every trigger on the way
         fires in order, and a skip stops early at one that wakes the agent."""
         featured = set(self.moments.values()) | set(self.burns)
-        # the story's passes get a 90-second run-in at 1x; the other watch-list passes a quick 15 seconds
-        lead = lambda x: (90.0 if x[2] in featured else 15.0) if x[1] == "pass" else 60.0
+        # the story's passes get a 20-second run-in at 1x (long enough to watch the range fall, short enough for a
+        # ten-minute demo); the other watch-list passes a quick 10 seconds
+        lead = lambda x: (20.0 if x[2] in featured else 10.0) if x[1] == "pass" else 60.0
         nt = next((x for x in self.triggers() if x[1] != "start" and x[0] - lead(x) > self.t + 0.5), None)
         if nt is None:
             return None

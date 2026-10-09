@@ -11,10 +11,10 @@ and nearly all of them are noise. **Which ones are real, and what do you do abou
 | Stage | What | Status |
 |---|---|---|
 | 1 | Data research and licensing | Done |
-| 2 | `notebooks/demo_01_load_explore.ipynb` and `scripts/load.sh` | **In verification** |
-| 3 | The agent—ADK, a Google-managed MCP server, a custom tool, and the Agent Runtime code sandbox | Next |
-| 4 | The UI | — |
-| 5 | This README, and the run-of-show | — |
+| 2 | `notebooks/demo_01_load_explore.ipynb` and `scripts/load.sh` | Done |
+| 3 | The agent—ADK, a Google-managed MCP server, a custom tool, and the Agent Runtime code sandbox | Done |
+| 4 | The UI: `console/`, a flight dynamics console with a watcher, the agent and human approval | Done |
+| 5 | This README, and the run-of-show: [`run-of-show/`](run-of-show/) | Run-of-show done; README next |
 
 Orbital data: U.S. Space Command, via Space-Track.org; satellite catalogue via CelesTrak (celestrak.org).
 See `NOTICE`.

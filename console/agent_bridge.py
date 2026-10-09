@@ -135,4 +135,4 @@ class ReplayAgent:
 
 
 def recordings() -> list[str]:
-    return sorted(p.stem for p in RECORDINGS.glob("*.json")) if RECORDINGS.exists() else []
+    return sorted(p.stem for p in RECORDINGS.glob("*.json") if not p.name.startswith(".")) if RECORDINGS.exists() else []

@@ -25,3 +25,10 @@ Thumbs.db
 # The console's local copy of the snapshot slice it needs (console/data.py writes it; orbital data is not committed)
 console/.snapshot_extract.json
 console/.cache/
+
+# Live console runs record themselves here; only the kept replay (rehearsal.json) is committed
+console/recordings/run-*.json
+console/recordings/.*.json
+
+# The run-of-show's build kit
+run-of-show/node_modules/
