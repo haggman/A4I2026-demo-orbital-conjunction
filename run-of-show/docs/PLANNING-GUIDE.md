@@ -126,6 +126,8 @@ bash scripts/start_demo.sh
 
 > It's all in this repo, and the box at the top tells you where each piece lives. Read your own challenge first; come back here when you want to see what the end looks like.
 
+> One thing before we start: this is the far end, not the bar. Plenty of teams will finish in the ADK web UI with a solid agent, and that's a good finish. If your team has the right people and the time, you can get as far as this. I'll point out who does what as we go.
+
 **Needs** README at the top: the title and the "This one has been solved for you" box.
 
 **SAY**
@@ -140,6 +142,10 @@ Point at the box's table: the five build-path steps, each with the folder that s
 
 Scroll to Why this one matters: a small constellation, 32,000 tracked objects, warnings that never stop.
 
+**IF YOUR TEAM HAS…**
+
+This is the far end of the path, not the bar. A working agent in adk web is a good finish. A team with a front-end developer and time to spare can get this far.
+
 ### 2. Load & Explore: load it, distrust it, validate it
 
 *Tab: Colab Enterprise · the data notebook · ~1.5 min*
@@ -151,6 +157,8 @@ Scroll to Why this one matters: a small constellation, 32,000 tracked objects, w
 > This is the query that surprises people: a big share of what's up there came from two moments, 2007 and 2009. Kessler syndrome in one table.
 
 > And here's the honest answer for the week: 850 close approaches, and one worth escalating. Everything after this point is about that one.
+
+> We picked this dataset because it's public, real and messy. Yours comes loaded for you, and you're not limited to it: bring any data that serves your user, as long as the license clears the bar. If your team has someone at home in SQL or pandas, this is their lane.
 
 **Needs** demo_01_load_explore.ipynb, already run end to end (Runtime ▸ Run all, this morning, same project).
 
@@ -176,6 +184,10 @@ Table of contents ▸ 10—The honest numbers
 
 → *850 approaches under 10 km this week: 1 ESCALATE, 7 WATCH, 842 noise.*
 
+**IF YOUR TEAM HAS…**
+
+Someone at home in SQL or pandas: the data lane. We picked public orbital data; your challenge loads its own, and you can bring any dataset that serves your user and clears the license bar.
+
 The notebook also carries the real messes we hit (the end of the old TLE format, stale tracking, a timestamp BigQuery refused) and a validation section that re-reads the loaded tables. Mention them only if someone asks: they're what the data lane will live through.
 
 **If it goes wrong:** If the outputs are gone (kernel restarted), don't re-run live: the screen takes two minutes. Say the numbers from this page and move on.
@@ -189,6 +201,8 @@ The notebook also carries the real messes we hit (the end of the old TLE format,
 > Second step: build the agent. Same required stack as yours: ADK, Gemini, BigQuery, and a Google-managed MCP server it uses to query the tables.
 
 > Watch what it does: it decided that question needs a query, wrote it, ran it through the MCP server, and summarised. Nobody wrote that SQL for it.
+
+> This is the core every team should reach. A Python developer and someone who writes clear instructions can get you here; the prompt is harder than it looks.
 
 **Needs** cymbal_ops selected, new session.
 
@@ -210,6 +224,10 @@ Events panel ▸ click an execute_sql_readonly call
 
 → *The SQL the agent wrote against the conjunctions table.*
 
+**IF YOUR TEAM HAS…**
+
+A Python developer and someone who writes clear instructions: the agent lane. This is the core every team should reach.
+
 **If it goes wrong:** Slow? Keep talking: every call has a time limit and retries. Past a minute, go to the console tab: its chat box is the same agent.
 
 ### 4. Differentiate: our own tool, and the code sandbox
@@ -223,6 +241,8 @@ Events panel ▸ click an execute_sql_readonly call
 > And this is why we require a custom tool even though MCP can run queries: assess_conjunction decides whether the tracking is fresh enough to act on, whether the other object can move, and what counts as clear. That's judgment, and judgment is code.
 
 > Burning earlier is cheaper: half the fuel, and the difference is more than a day of the satellite's life.
+
+> If your team has someone who knows the problem's world, a nurse, a planner, an engineer, they're the one who decides what the custom tool should judge. And your differentiator is the one thing judges will look for; don't leave it for last.
 
 **SAME CHAT**
 
@@ -244,6 +264,10 @@ Events panel ▸ click the run_in_sandbox call
 
 → *Four lines of Python the model wrote, using our orbit_whatif module.*
 
+**IF YOUR TEAM HAS…**
+
+Someone who knows the problem domain: they decide what the custom tool judges. Your challenge's differentiator is the one thing judges will look for; don't leave it for last.
+
 **If it goes wrong:** Past a minute: say "the console will show us the same answer" and move to step 5. The console replays a real run of this question.
 
 ### 5. Deploy: the same agent, running in the cloud
@@ -255,6 +279,8 @@ Events panel ▸ click the run_in_sandbox call
 > Fourth: deploy. This is Cloud Run: Google runs our container, we manage no servers. It's the same agent you just watched, on a real URL, one command.
 
 > Two settings worth stealing. Authentication required, because this agent can run code and query our data. And one instance kept warm, because the first request after a quiet hour is usually the one you make on stage. Yours goes to Cloud Run or Agent Runtime, your choice.
+
+> One honest note: what you watched a minute ago ran in Cloud Shell, not on Cloud Run. Same code, same model, same data. With the clock running, local keeps things simple; in real life, at some point, you'd run your tests against the deployed copy too. Deploy early anyway, so your front end isn't waiting on you.
 
 **Needs** Navigation menu ▸ Cloud Run ▸ cymbal-ops, already open.
 
@@ -277,6 +303,14 @@ Point at the service URL and Authentication: Require authentication. Minimum ins
 
 One command put it there: bash agent/deploy.sh. Your agent has to actually run somewhere too.
 
+**SAY**
+
+Today we demo from Cloud Shell: with the clock running, local keeps it simple. In real life you'd test the deployed copy too.
+
+**IF YOUR TEAM HAS…**
+
+Whoever owns the agent deploys it early, so the front end isn't blocked. One command.
+
 ### 6. Show: the finished product
 
 *Tab: Console · port 8080 · ~3 min*
@@ -292,6 +326,8 @@ One command put it there: bash agent/deploy.sh. Your agent has to actually run s
 > Now the other alert. On Friday this rocket body was stale: the tracking was a week old, so the agent asked for fresh tracking instead of spending fuel. Tuesday it arrives, and the right answer is: do nothing. Same agent, opposite answer. That's judgment.
 
 > The cards you just saw are a recording of a real run of the agent, played back so a demo on conference wifi runs the same every time. That's a trick worth stealing for your own Show step.
+
+> Could your team build a screen like this today? If you have a web developer and the time, yes, and keep it small. If not, the ADK web UI is a legitimate finish. Judges ask why you chose your interface; have an answer.
 
 **Needs** Header says REPLAY. Clock Fri 25 Sep 01:00:00 UTC. If not: ⋯ ▸ Restart the week.
 
@@ -340,6 +376,10 @@ Skip to next
 
 Approve
 
+**IF YOUR TEAM HAS…**
+
+A web developer with time: a custom face like this. Without one, the ADK web UI is a legitimate finish; say why you chose it.
+
 **If it goes wrong:** If the header says LIVE AGENT, switch: ⋯ ▸ Agent ▸ replay · rehearsal, then Skip to next. Replay never calls Gemini.
 
 ### 7. Close: rigor and judgment
@@ -350,7 +390,9 @@ Approve
 
 > Look at how it writes it up: the worst case, which needs no assumptions, next to the number under an assumed uncertainty, and a section on what we can't see. And the Tuesday update is labelled SIMULATED wherever it appears.
 
-> That's the bar: every number from a tool or a query, every assumption stated. Now go build yours.
+> That's the bar: every number from a tool or a query, every assumption stated.
+
+> And remember where this ended: further than most teams will get in four and a half hours, and that's fine. Three quarters of the way with clear reasoning and honest limits beats a polished demo with nothing behind it. Play to the people at your table. Now go build yours.
 
 **DO**
 

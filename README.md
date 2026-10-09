@@ -35,6 +35,10 @@
 >    bash scripts/start_demo.sh      # the ADK web UI on port 8000 and the console on port 8080
 >    ```
 >
+> **This is the far end of the path, not the bar.** A working agent in the ADK web UI, on your challenge's
+> data, is a good finish. A team with a web developer, someone who knows the problem's world, and time to
+> spare can get as far as this. The four lanes in Getting started say who does what.
+>
 > **Two differences from your repo.** Your `agent/` folder is empty on purpose; here it is full, because
 > showing a finished one is the point. And this repo is not a template: clone it, don't build your team's
 > project in it.
