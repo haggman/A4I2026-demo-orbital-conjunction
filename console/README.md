@@ -42,7 +42,7 @@ source scripts/activate.sh
 python console/data.py                  # once per project: the console's slice of the snapshot
 python console/make_scenario.py         # only if you change the storyline; scenario.json is committed
 python console/test_sim.py              # the week, headless, no Gemini
-uvicorn console.app:app --port 8080     # then Web Preview > Preview on port 8080
+uvicorn console.app:app --port 8080     # then click http://0.0.0.0:8080 in the terminal
 bash console/deploy.sh                  # Cloud Run: cymbal-console, one instance, authentication required
 ```
 

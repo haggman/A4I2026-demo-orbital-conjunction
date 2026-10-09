@@ -80,7 +80,7 @@ python console/data.py
 uvicorn console.app:app --port 8080
 ```
 
-→ *Web Preview ▸ Change port ▸ 8080. Header says LIVE AGENT.*
+→ *Click http://0.0.0.0:8080 in Cloud Shell. Header says LIVE AGENT.*
 
 1. Skip to next until the CYMBAL-04 card asks for a decision; wait for YOUR CALL; Approve.
 2. Skip to next until Tuesday's card; wait for YOUR CALL; Approve. Then stop uvicorn (Ctrl+C in that terminal).
@@ -383,7 +383,7 @@ These come from the docs, not from the live product. Check each once and correct
 - [ ] Colab Enterprise: the Table of contents entry names for sections 3, 7 and 10, and the count of objects crossing 855–905 km printed in section 3 (put the number on the teleprompter).
 - [ ] Section 7's hook numbers (the share of objects and of debris from the 2007 and 2009 events) as printed in this project.
 - [ ] ADK web UI 2.7.0: the name of the events / trace panel and that clicking a tool call shows its arguments.
-- [ ] Two Web Preview tabs from one Cloud Shell (ports 8000 and 8080) at the same time.
+- [ ] The start block's two links each open their own Web Preview tab (ports 8000 and 8080), both working at once.
 - [ ] The Cloud Run page shows cymbal-ops with "Require authentication" and one instance.
 
 

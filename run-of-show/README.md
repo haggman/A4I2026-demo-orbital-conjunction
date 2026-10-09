@@ -22,7 +22,7 @@ bash scripts/start_demo.sh          # from the repo root in Cloud Shell, after s
 ```
 
 It warms the code sandbox, checks Gemini is quick, starts the ADK web UI on port 8000 and the console on port
-8080, and tells you which Web Preview ports to open. `bash scripts/start_demo.sh --stop` stops both.
+8080, and prints a link for each: click it in the terminal to open it in Web Preview. `bash scripts/start_demo.sh --stop` stops both.
 
 ## One thing worth knowing: the console replays a real run
 

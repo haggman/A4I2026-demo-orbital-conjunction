@@ -46,7 +46,7 @@ python agent/model_check.py 2>/dev/null | tail -4 | sed 's/^/  /'
 
 bold "3/4  Starting the ADK web UI (port 8000) and the console (port 8080, replay)"
 stop_all
-nohup adk web --port 8000 agent >"${RUN_DIR}/adk-web.log" 2>&1 &
+nohup bash scripts/adk_web.sh >"${RUN_DIR}/adk-web.log" 2>&1 &   # Cloud Shell-safe flags: see the script
 echo $! >"${RUN_DIR}/adk-web.pid"
 A4I_CONSOLE_MODE=replay A4I_CONSOLE_REPLAY=rehearsal nohup uvicorn console.app:app --port 8080 --workers 1 >"${RUN_DIR}/console.log" 2>&1 &
 echo $! >"${RUN_DIR}/console.pid"
@@ -61,7 +61,7 @@ mode=$(curl -s http://localhost:8080/api/state | python -c 'import json,sys; d=j
 echo "  ✓ console: ${mode}"
 
 echo
-bold "Ready. Open two Web Preview tabs:"
-echo "  Web Preview ▸ Change port ▸ 8000   the ADK web UI (pick cymbal_ops)"
-echo "  Web Preview ▸ Change port ▸ 8080   the console"
+bold "Ready. Click each link to open it in its own Web Preview tab:"
+echo "  http://0.0.0.0:8000/dev-ui/?app=cymbal_ops    the ADK web UI, cymbal_ops already picked (steps 3 and 4)"
+echo "  http://0.0.0.0:8080                           the console (step 6)"
 echo "  Stop both later with: bash scripts/start_demo.sh --stop"

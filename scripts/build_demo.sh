@@ -81,7 +81,7 @@ cat <<EOF
     source scripts/activate.sh
 
   Then:
-    adk web agent                      the ADK web UI (Web Preview > Change port > 8000), pick cymbal_ops
+    bash scripts/adk_web.sh            the ADK web UI: click http://0.0.0.0:8000/dev-ui/?app=cymbal_ops
     python agent/model_check.py        which Gemini model is quick right now (settings live in demo.env)
     python agent/setup_sandbox.py      before a session: reset the sandbox to the start state
 

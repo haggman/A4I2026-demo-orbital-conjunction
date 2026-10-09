@@ -43,6 +43,6 @@ if grep -q '^A4I_SANDBOX=' agent/cymbal_ops/.env 2>/dev/null; then
 else
   echo "  sandbox: none yet. Run: python agent/setup_sandbox.py"
 fi
-echo "  settings file: demo.env    try: python agent/smoke_test.py --quick  ·  python agent/model_check.py  ·  adk web agent"
-echo "  console: uvicorn console.app:app --port 8080  (then Web Preview on port 8080)"
+echo "  settings file: demo.env    try: python agent/smoke_test.py --quick  ·  python agent/model_check.py  ·  bash scripts/adk_web.sh"
+echo "  console: uvicorn console.app:app --port 8080  (then click http://0.0.0.0:8080)"
 unset _a4i_root _a4i_venv _a4i_adk _a4i_reqs _a4i_console_reqs _a4i_want _a4i_project

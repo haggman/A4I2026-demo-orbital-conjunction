@@ -68,7 +68,7 @@ any new terminal:
 source scripts/activate.sh             # makes or updates the Python environment, switches it on, shows the settings
 python agent/smoke_test.py --quick     # ask the agent two operator questions; one diagnostic block
 python agent/model_check.py            # which Gemini model answers quickly right now
-adk web agent                          # the ADK web UI: Web Preview > Change port > 8000
+bash scripts/adk_web.sh                # the ADK web UI, Cloud Shell-safe; click http://0.0.0.0:8000/dev-ui/?app=cymbal_ops
 bash agent/deploy.sh                   # Cloud Run, with the settings from demo.env
 ```
 

@@ -19,17 +19,19 @@ const PACK = {
     { before: "card", title: "BEFORE THE SHOW · 1 · ONCE PER PROJECT", steps: [
       { tag: "SHELL", label: "CLOUD SHELL · a fresh project · about 10 minutes", text: "git clone https://github.com/haggman/A4I2026-demo-orbital-conjunction.git\ncd A4I2026-demo-orbital-conjunction\nbash scripts/build_demo.sh",
         expect: "Data loads (850 conjunctions) · sandbox created · smoke test: 7 checks PASS · Cloud Run deploys cymbal-ops · Ready." },
-      { tag: "DO", label: "COLAB ENTERPRISE · about 3 minutes", text: "Import notebooks/demo_01_load_explore.ipynb from the repo ▸ Runtime ▸ Run all",
+      { tag: "DO", label: "COLAB ENTERPRISE · about 3 minutes", text: "Google Cloud console ▸ search Colab Enterprise ▸ enable the APIs it asks for (twice is normal) ▸ My Notebooks ▸ Import ▸ source URL, and paste:" },
+      { tag: "PASTE", label: "PASTE · the notebook's URL", text: "https://raw.githubusercontent.com/haggman/A4I2026-demo-orbital-conjunction/main/notebooks/demo_01_load_explore.ipynb" },
+      { tag: "DO", label: "COLAB ENTERPRISE", text: "Import ▸ open it ▸ Runtime ▸ Run all",
         expect: "Section 10: 850 approaches. Section 11: every check PASS. Keep this tab: it's step 2." },
     ], note: "Once per Google Cloud project. A new Google Skills lab is a new project: start here again." },
     { before: "card", title: "BEFORE THE SHOW · 2 · MORNING OF", steps: [
       { tag: "SHELL", label: "CLOUD SHELL · repo root · the start block", text: "bash scripts/start_demo.sh",
-        expect: "Sandbox ✓ · model check · port 8000 ✓ · port 8080 ✓ · console: replay rehearsal · Ready." },
+        expect: "Sandbox ✓ · model check · port 8000 ✓ · port 8080 ✓ · console: replay rehearsal · Ready, and two links: http://0.0.0.0:8000/dev-ui/?app=cymbal_ops and http://0.0.0.0:8080." },
       { tag: "DO", label: "READ THE MODEL CHECK", text: "Default model quick (a few seconds) → steps 3–4 run live as written.\nSlow → still run them; use each step's IF IT GOES WRONG line. The console is a replay either way." },
       { tag: "DO", label: "COLAB ENTERPRISE", text: "Notebook outputs still there? If the runtime was recycled: Runtime ▸ Run all (3 minutes)." },
     ] },
     { before: "card", title: "BEFORE THE SHOW · 3 · OPEN THE FIVE TABS", steps: [
-      { tag: "DO", label: "IN THIS ORDER, LEFT TO RIGHT", text: "1  GitHub ▸ haggman/A4I2026-demo-orbital-conjunction (the README)\n2  Colab Enterprise ▸ demo_01_load_explore.ipynb\n3  Web Preview ▸ Change port ▸ 8000 ▸ cymbal_ops ▸ new session\n4  Google Cloud console ▸ Cloud Run ▸ cymbal-ops\n5  Web Preview ▸ Change port ▸ 8080",
+      { tag: "DO", label: "IN THIS ORDER, LEFT TO RIGHT", text: "1  GitHub: https://github.com/haggman/A4I2026-demo-orbital-conjunction (the README)\n2  Colab Enterprise ▸ demo_01_load_explore.ipynb (from page 1)\n3  The start block's 8000 link (click it in Cloud Shell): the ADK web UI, cymbal_ops picked ▸ new session\n4  Google Cloud console ▸ Cloud Run ▸ cymbal-ops\n5  The start block's 8080 link: the console",
         expect: "Tab 5: header says REPLAY, clock Fri 25 Sep 01:00:00 UTC, three watcher cards on the desk." },
     ], note: "Stop both web apps afterwards with: bash scripts/start_demo.sh --stop" },
   ],
@@ -37,6 +39,7 @@ const PACK = {
     SHELL: { label: "CLOUD SHELL" },
     TYPE: { label: "TYPE in the ADK web UI" },
     "FOLLOW-UP": { label: "FOLLOW-UP (same session)" },
+    PASTE: { label: "PASTE", color: "orange", mono: true },
   },
 };
 
@@ -189,7 +192,7 @@ const GUIDE = {
     { h2: "The rehearsal recording (once; it's committed, so every later run reuses it)" },
     "The console replays a real run of the agent. Make one, check it, keep it:",
     { step: { tag: "SHELL", label: "CLOUD SHELL · the console, live", text: "source scripts/activate.sh\npython console/data.py\nuvicorn console.app:app --port 8080",
-      expect: "Web Preview ▸ Change port ▸ 8080. Header says LIVE AGENT." } },
+      expect: "Click http://0.0.0.0:8080 in Cloud Shell. Header says LIVE AGENT." } },
     { numbered: ["Skip to next until the CYMBAL-04 card asks for a decision; wait for YOUR CALL; Approve.",
       "Skip to next until Tuesday's card; wait for YOUR CALL; Approve. Then stop uvicorn (Ctrl+C in that terminal)."] },
     { step: { tag: "SHELL", label: "CLOUD SHELL · keep it", text: "python console/keep_recording.py",
@@ -226,7 +229,7 @@ const GUIDE = {
     "Colab Enterprise: the Table of contents entry names for sections 3, 7 and 10, and the count of objects crossing 855–905 km printed in section 3 (put the number on the teleprompter).",
     "Section 7's hook numbers (the share of objects and of debris from the 2007 and 2009 events) as printed in this project.",
     "ADK web UI 2.7.0: the name of the events / trace panel and that clicking a tool call shows its arguments.",
-    "Two Web Preview tabs from one Cloud Shell (ports 8000 and 8080) at the same time.",
+    "The start block's two links each open their own Web Preview tab (ports 8000 and 8080), both working at once.",
     "The Cloud Run page shows cymbal-ops with \"Require authentication\" and one instance.",
   ],
   files: [

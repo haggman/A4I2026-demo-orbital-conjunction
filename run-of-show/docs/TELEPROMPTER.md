@@ -30,7 +30,17 @@ bash scripts/build_demo.sh
 
 **COLAB ENTERPRISE · about 3 minutes**
 
-Import notebooks/demo_01_load_explore.ipynb from the repo ▸ Runtime ▸ Run all
+Google Cloud console ▸ search Colab Enterprise ▸ enable the APIs it asks for (twice is normal) ▸ My Notebooks ▸ Import ▸ source URL, and paste:
+
+**PASTE · the notebook's URL**
+
+```text
+https://raw.githubusercontent.com/haggman/A4I2026-demo-orbital-conjunction/main/notebooks/demo_01_load_explore.ipynb
+```
+
+**COLAB ENTERPRISE**
+
+Import ▸ open it ▸ Runtime ▸ Run all
 
 → *Section 10: 850 approaches. Section 11: every check PASS. Keep this tab: it's step 2.*
 
@@ -46,7 +56,7 @@ Once per Google Cloud project. A new Google Skills lab is a new project: start h
 bash scripts/start_demo.sh
 ```
 
-→ *Sandbox ✓ · model check · port 8000 ✓ · port 8080 ✓ · console: replay rehearsal · Ready.*
+→ *Sandbox ✓ · model check · port 8000 ✓ · port 8080 ✓ · console: replay rehearsal · Ready, and two links: http://0.0.0.0:8000/dev-ui/?app=cymbal_ops and http://0.0.0.0:8080.*
 
 **READ THE MODEL CHECK**
 
@@ -63,11 +73,11 @@ Notebook outputs still there? If the runtime was recycled: Runtime ▸ Run all (
 
 **IN THIS ORDER, LEFT TO RIGHT**
 
-1  GitHub ▸ haggman/A4I2026-demo-orbital-conjunction (the README)  
-2  Colab Enterprise ▸ demo_01_load_explore.ipynb  
-3  Web Preview ▸ Change port ▸ 8000 ▸ cymbal_ops ▸ new session  
+1  GitHub: https://github.com/haggman/A4I2026-demo-orbital-conjunction (the README)  
+2  Colab Enterprise ▸ demo_01_load_explore.ipynb (from page 1)  
+3  The start block's 8000 link (click it in Cloud Shell): the ADK web UI, cymbal_ops picked ▸ new session  
 4  Google Cloud console ▸ Cloud Run ▸ cymbal-ops  
-5  Web Preview ▸ Change port ▸ 8080
+5  The start block's 8080 link: the console
 
 → *Tab 5: header says REPLAY, clock Fri 25 Sep 01:00:00 UTC, three watcher cards on the desk.*
 
