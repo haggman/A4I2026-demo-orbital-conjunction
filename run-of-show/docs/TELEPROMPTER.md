@@ -219,11 +219,20 @@ Events panel ▸ click the run_in_sandbox call
 
 **NEEDS** Navigation menu ▸ Cloud Run ▸ cymbal-ops, already open.
 
+**WHAT THEY'RE LOOKING AT**
+
+Cloud Run: Google runs your container for you, no servers to manage.  
+cymbal-ops: the same agent as step 3, plus the ADK web UI, packaged as a container by adk deploy.  
+URL: where it answers on the internet.  
+Require authentication: only signed-in people with access can reach it. The agent can run code and query BigQuery; an open URL on a slide is an invitation.  
+Minimum instances 1: one copy always running, so the first request after a quiet hour doesn't wait for a cold start.  
+Revision: each deploy is a new version; Cloud Run can roll back to any of them.
+
 **DO**
 
-Point at the service URL, Authentication: Require authentication, and the one instance.
+Point at the service URL and Authentication: Require authentication. Minimum instances 1 is in the revision's details; if it isn't quick to find, just say it.
 
-→ *cymbal-ops, healthy, one revision.*
+→ *cymbal-ops, healthy, one instance kept warm.*
 
 **SAY**
 
@@ -254,6 +263,15 @@ Skip to next
 Skip to next
 
 → *Decision needed: CYMBAL-04. The agent's steps tick in, then YOUR CALL: MANEUVER, 0.0181 m/s prograde at 04:00 → 3,036 m, 1.54 days.*
+
+**THE PURPLE AGENT CARD, TOP TO BOTTOM**
+
+Watcher's line: why it woke the agent. 18 h out (tracking as good as it gets, still time to burn cheaply), worst case 1 in 10,000, tracking fresh.  
+assess_conjunction (our tool): the facts from BigQuery; is the tracking fresh, can the debris dodge (no); stages the case in the sandbox.  
+run_in_sandbox: the agent's own Python, run in the Agent Runtime code sandbox. Sizes the burn at 04:00 (0.0181 m/s) and noon (0.0343 m/s).  
+maneuver_cost ×2: each burn in days of satellite life: 1.54 vs 2.92.  
+build_assessment: writes it up, re-reading every fact from BigQuery.  
+Then: the agent's words · the bold summary · the write-up (click to open) · Approve / Hold · how long it took (about 23 s).
 
 **DO**
 
