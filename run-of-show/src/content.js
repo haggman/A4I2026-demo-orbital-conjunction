@@ -134,7 +134,7 @@ const blocks = [
   gotcha: "If the header says LIVE AGENT, switch: ⋯ ▸ Agent ▸ replay · rehearsal, then Skip to next. Replay never calls Gemini.",
   why: "What \"an agent, not a chat box\" looks like: plain code watches, the agent decides, a human approves. Two alerts, two opposite answers.",
   say: ["Last step, and it's what your judges will see: show it. This is the finished product. Time runs over the week; plain code, no AI, watches for anything that matters; and when something needs a decision, it wakes the agent.",
-        "Eighteen hours out, the agent runs the playbook you just watched: assess, size the burn at two times, price it, write it up. Then it waits for a human. I approve.",
+        "Eighteen hours out, when the tracking is as good as it will get and there's still time to burn cheaply, the agent runs the playbook you just watched: assess, size the burn at two times, price it, write it up. Then it waits for a human. I approve.",
         "There it goes. Without the burn, 301 metres. With it, three kilometres, for a day and a half of the satellite's life.",
         "Now the other alert. On Friday this rocket body was stale: the tracking was a week old, so the agent asked for fresh tracking instead of spending fuel. Tuesday it arrives, and the right answer is: do nothing. Same agent, opposite answer. That's judgment.",
         "The cards you just saw are a recording of a real run of the agent, played back so a demo on conference wifi runs the same every time. That's a trick worth stealing for your own Show step."],
@@ -157,6 +157,7 @@ const GUIDE = {
   lede: "A live demo, under ten minutes, no deck. It walks the five steps of the room's build path on a finished sixth challenge, "
     + "Cymbal Orbital's conjunction screening, and ends on the finished product. Everything in this folder is public: the students may keep it.",
   howItWorks: [
+    "New to this demo? Read docs/INSTRUCTOR-GUIDE.md first: how the console would run for real, why the agent is woken 18 hours out, what Skip does, how to read the picture, and what the agent did, beat by beat with screenshots.",
     "Steps 3 and 4 are live: the real agent, real Gemini, in the ADK web UI. Talk over the waits (about 15 s and 30 s on a good day).",
     "Step 6, the console, runs in REPLAY: the agent cards are a recording of a real run (console/recordings/rehearsal.json), "
       + "played back at the same sim moments with the same steps, so it behaves the same every time. The header says REPLAY; say so in the talk track.",

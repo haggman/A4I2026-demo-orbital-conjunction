@@ -118,34 +118,13 @@ function drawFlyby() {
   const dt = -e.to_tca_s, col = zoneCol(e.miss_m), oy = y(e.miss_m), ox = X(dt);
   g += `<line x1="${L}" x2="${ox}" y1="${oy}" y2="${oy}" stroke="${col}" stroke-width="3"/><line x1="${ox}" x2="${L + pw}" y1="${oy}" y2="${oy}" stroke="${col}" stroke-width="2" stroke-dasharray="2 5"/>`;
   g += `<line x1="${X(0)}" x2="${X(0)}" y1="${oy}" y2="${y(0) - 12}" stroke="${col}" stroke-width="2"/>`;
-  g += `<text x="${X(0) + 10}" y="${Math.min(y(0) - 24, oy + 26)}" class="halo" style="fill:${col};font-weight:700;font-size:17px">${dt < 0 ? "will miss by" : "missed by"} ${fmtM(e.miss_m)}</text>`;
+  const below = oy <= T + 40;                    // near the top, the object's label goes under its line: put the miss under that
+  g += `<text x="${X(0) + 10}" y="${below ? oy + 58 : Math.min(y(0) - 24, oy + 26)}" class="halo" style="fill:${col};font-weight:700;font-size:17px">${dt < 0 ? "will miss by" : "missed by"} ${fmtM(e.miss_m)}</text>`;
   const far = Math.abs(dt) > TW;
   g += `<circle cx="${ox}" cy="${oy}" r="11" fill="${col}"/>`;
   const where = far ? (dt < 0 ? `closest approach ${span(e.to_tca_s)}` : "passed") : `${fmtKm(e.range_km)} away · ${e.rel_speed_km_s.toFixed(1)} km/s`;
   const lx = Math.max(L + 8, Math.min(L + pw - 8, ox)), anchor = ox > L + pw * .6 ? "end" : ox < L + pw * .25 ? "start" : "middle";
-  g += `<text x="${lx}" y="${oy > T + 40 ? oy - 18 : oy + 30}" text-anchor="${anchor}" class="halo" style="font-weight:700;font-size:15px">${esc(e.object_name)} · ${where}</text>`;
-  svg.innerHTML = g;
-}
-
-function drawPlane() {                          // the small head-on view: same scale, zones shaded
-  const e = S.focus, svg = $("plane");
-  if (!e) { svg.innerHTML = ""; return; }
-  const P = 150, r = (m) => P * SC(m);
-  const pt = (p) => { const m = Math.hypot(p[0], p[1]), k = m ? r(m) / m : 0; return [p[1] * k, -p[0] * k]; };   // sideways right, radial up
-  let g = `<circle r="${P}" fill="var(--ok)" opacity=".14"/><circle r="${r(3033)}" fill="var(--panel)"/><circle r="${r(3033)}" fill="var(--line)" opacity=".3"/>`;
-  g += `<circle r="${r(1000)}" fill="var(--watch)" opacity=".22"/><circle r="${r(303.3)}" fill="var(--escalate)" opacity=".35"/>`;
-  for (const [m, c] of [[303.3, "var(--escalate)"], [1000, "var(--watch)"], [3033, "var(--ok)"]]) g += `<circle r="${r(m)}" fill="none" stroke="${c}" stroke-width="2"/>`;
-  g += `<rect x="-7" y="-7" width="14" height="14" fill="var(--info)"/>`;
-  const before = e.plane_before_m || (e.before && e.before.plane_m);
-  if (before && e.plane_m) {
-    const [bx, by] = pt(before), [ax, ay] = pt(e.plane_m);
-    g += `<circle cx="${bx}" cy="${by}" r="9" fill="none" stroke="${zoneCol(Math.hypot(...before))}" stroke-width="3"/><line x1="${bx}" y1="${by}" x2="${ax}" y2="${ay}" stroke="var(--ok)" stroke-width="3" stroke-dasharray="5 4"/>`;
-  }
-  if (e.burn && e.burn.status === "scheduled" && e.burn.plane_after_m) {
-    const [px, py] = pt(e.burn.plane_after_m);
-    g += `<circle cx="${px}" cy="${py}" r="11" fill="none" stroke="var(--ok)" stroke-width="3" stroke-dasharray="3 3"/>`;
-  }
-  if (e.plane_m) { const [x, y] = pt(e.plane_m); g += `<circle cx="${x}" cy="${y}" r="12" fill="${zoneCol(e.miss_m)}"/>`; }
+  g += `<text x="${lx}" y="${below ? oy + 30 : oy - 18}" text-anchor="${anchor}" class="halo" style="font-weight:700;font-size:15px">${esc(e.object_name)} · ${where}</text>`;
   svg.innerHTML = g;
 }
 
@@ -265,7 +244,7 @@ function drawTimeline() {
 async function poll() {
   try {
     S = await (await fetch("/api/state")).json();
-    drawHeader(); drawBanner(); drawFleet(); drawFlyby(); drawPlane(); drawFacts(); drawCards(); drawTimeline();
+    drawHeader(); drawBanner(); drawFleet(); drawFlyby(); drawFacts(); drawCards(); drawTimeline();
   } catch (e) { $("next").textContent = "lost the console backend: retrying"; }
   setTimeout(poll, 250);
 }

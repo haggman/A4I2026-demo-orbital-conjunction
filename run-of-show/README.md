@@ -7,7 +7,8 @@ borrow anything in it.
 
 | File | What it is |
 |---|---|
-| [`docs/TELEPROMPTER.md`](docs/TELEPROMPTER.md) | Before the show (setup, the recording, morning of, the tabs), then one step per page: the tab to be on, what to click, what to type, what a good result looks like |
+| [`docs/INSTRUCTOR-GUIDE.md`](docs/INSTRUCTOR-GUIDE.md) | **Start here if you're presenting.** The console explained: how it would run for real, why the agent is woken 18 hours out, Skip, reading the picture, what the agent did, and the walkthrough beat by beat with screenshots |
+| [`docs/TELEPROMPTER.md`](docs/TELEPROMPTER.md) | Before the show (setup, morning of, the tabs), then one step per page: the tab to be on, what to click, what to type, what a good result looks like |
 | `docs/TELEPROMPTER - A4I kickoff demo.docx` | The same, for a second monitor |
 | [`docs/PLANNING-GUIDE.md`](docs/PLANNING-GUIDE.md) | The night-before document: how it works, setup, the talk track, a fact sheet |
 | `docs/PLANNING GUIDE - A4I kickoff demo.docx` | The same, in Word |

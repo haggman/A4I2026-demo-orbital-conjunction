@@ -6,6 +6,7 @@ A live demo, under ten minutes, no deck. It walks the five steps of the room's b
 
 **How this demo works**
 
+- New to this demo? Read docs/INSTRUCTOR-GUIDE.md first: how the console would run for real, why the agent is woken 18 hours out, what Skip does, how to read the picture, and what the agent did, beat by beat with screenshots.
 - Steps 3 and 4 are live: the real agent, real Gemini, in the ADK web UI. Talk over the waits (about 15 s and 30 s on a good day).
 - Step 6, the console, runs in REPLAY: the agent cards are a recording of a real run (console/recordings/rehearsal.json), played back at the same sim moments with the same steps, so it behaves the same every time. The header says REPLAY; say so in the talk track.
 - Everything else is pre-built and only looked at: the notebook was run in the morning, the agent was deployed to Cloud Run once.
@@ -267,7 +268,7 @@ One command put it there: bash agent/deploy.sh. Your agent has to actually run s
 
 > Last step, and it's what your judges will see: show it. This is the finished product. Time runs over the week; plain code, no AI, watches for anything that matters; and when something needs a decision, it wakes the agent.
 
-> Eighteen hours out, the agent runs the playbook you just watched: assess, size the burn at two times, price it, write it up. Then it waits for a human. I approve.
+> Eighteen hours out, when the tracking is as good as it will get and there's still time to burn cheaply, the agent runs the playbook you just watched: assess, size the burn at two times, price it, write it up. Then it waits for a human. I approve.
 
 > There it goes. Without the burn, 301 metres. With it, three kilometres, for a day and a half of the satellite's life.
 
