@@ -249,13 +249,13 @@ Approve
 
 **DO**
 
-Skip to next ▸ Skip to next ▸ Skip to next
+Skip to next ▸ Skip to next
 
-→ *Burn executed at 04:00 · a quick watch-list pass · CYMBAL-04's pass: missed by 3,036 m, red ghost line at 301 m.*
+→ *Burn executed at 04:00: the dot jumps up to the green line · CYMBAL-04's pass at real time: missed by 3,036 m, red ghost line at 301 m.*
 
 **DO**
 
-Skip to next ▸ Skip to next
+Skip to next
 
 → *Tuesday: fresh tracking for SL-3 R/B (pink SIMULATED). The dot jumps from 421 m to 3,700 m and the agent says no burn.*
 

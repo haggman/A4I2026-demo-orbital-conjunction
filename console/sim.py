@@ -109,6 +109,7 @@ class Sim:
         self.overrides: dict[int, dict] = {}     # norad -> OMM, once a (simulated) tracking update has arrived
         self.burns: dict[str, dict] = {}         # event key -> the approved burn
         self.waiting: dict | None = None         # the agent card the clock is paused for
+        self.too_late: set = set()               # passes the opening "too late to act" cards are about
         self.focus = self.moments.get("A")
         self.manual_focus = False
         self.fire((0.0, "start", "start"))      # the opening cards are on screen before anyone presses play
@@ -167,18 +168,20 @@ class Sim:
         return acts
 
     def skip_to_next(self) -> dict | None:
-        """Jump to just before the next thing that matters, and slow down so the room sees it happen:
-        a pass at 1x through its last 20 seconds (10 for passes outside the story); anything else a minute early
-        at 1 min/s. If we are already
-        inside that lead-in, go on to the thing after it. Nothing is skipped over: every trigger on the way
-        fires in order, and a skip stops early at one that wakes the agent."""
+        """Jump to just before the next thing in the story, and slow down so the room sees it happen:
+        a pass at 1x through its last 20 seconds; anything else (a decision, fresh tracking, a burn) a minute
+        early at 1 min/s. The story is the decisions, the fresh tracking, the burns, and the passes of the
+        approaches they are about (plus the opening "too late to act" pass). Other watch-list passes are not
+        stopped at, but nothing is skipped over: every trigger on the way fires in order and leaves its card,
+        and a skip stops early at one that wakes the agent. Once the story is over, Skip goes to the next pass."""
         if self.waiting:                         # the agent is working or waiting for Approve / Hold: time stays put
             return None
-        featured = set(self.moments.values()) | set(self.burns)
-        # the story's passes get a 20-second run-in at 1x (long enough to watch the range fall, short enough for a
-        # ten-minute demo); the other watch-list passes a quick 10 seconds
-        lead = lambda x: (20.0 if x[2] in featured else 10.0) if x[1] == "pass" else 60.0
-        nt = next((x for x in self.triggers() if x[1] != "start" and x[0] - lead(x) > self.t + 0.5), None)
+        featured = set(self.moments.values()) | set(self.burns) | self.too_late
+        story = lambda x: x[1] != "pass" or x[2] in featured
+        # passes get a 20-second run-in at 1x: long enough to watch the range fall, short enough for a ten-minute demo
+        lead = lambda x: 20.0 if x[1] == "pass" else 60.0
+        ahead = [x for x in self.triggers() if x[1] != "start" and x[0] - lead(x) > self.t + 0.5]
+        nt = next((x for x in ahead if story(x)), ahead[0] if ahead else None)
         if nt is None:
             return None
         target = nt[0] - lead(nt)
@@ -228,6 +231,7 @@ class Sim:
                 continue
             to_tca = self._s(e["tca"]) - self.t
             if to_tca < self.t_min_act():
+                self.too_late.add(e["key"])
                 acts.append({"card": self.card("watcher", f"Too late to act: {self._describe(e)}", [
                     f"Closest approach {fmt(e['tca'])}, in {span(to_tca)}: {e['miss_m']:,.1f} m, worst-case Pc {fmt_pc(e['max_pc'])}.",
                     f"We cannot plan, command and execute a burn in under {self.rules['act_limit_min']:.0f} minutes. Logged; watching the pass."],
@@ -493,70 +497,3 @@ class Sim:
             self.focus = last
         elif nt:
             self.focus = self._trigger_event(nt)
-
-    def state(self) -> dict:
-        self._auto_focus()
-        now = self.now()
-        f = self.events.get(self.focus) if self.focus else None
-        nt = next((x for x in self.triggers() if x[0] > self.t), None)
-        return {
-            "now_utc": O.iso(now), "now": fmt(now), "t_s": self.t, "end_s": self.t_end_s, "playing": self.playing,
-            "speed_i": self.speed_i, "speeds": self.speeds, "waiting": self.waiting["id"] if self.waiting else None,
-            "rules": self.rules, "snapshot": self.sc.get("snapshot"),
-            "next": {"kind": nt[1], "at": fmt(self.at(nt[0])), "in": span(nt[0] - self.t)} if nt else None,
-            "coming_up": self.coming_up(),
-            "fleet": self.fleet_board(),
-            "events": [self.event_view(e) for e in sorted(self.events.values(), key=lambda e: e["tca"])],
-            "focus": dict(self.event_view(f), range_km=round(self.range_km(f), 3),
-                          to_tca_s=(f["tca"] - now).total_seconds()) if f else None,
-            "cards": self.cards,
-        }
-
-    # controls
-    def play(self, on: bool):
-        if not self.waiting:
-            self.playing = on
-
-    def set_speed(self, i: int):
-        self.speed_i = max(0, min(len(self.speeds) - 1, int(i)))
-
-    def set_focus(self, key):
-        if key in self.events:
-            self.focus = key
-            self.manual_focus = True             # the operator chose it: hold it until the next card
-
-    LABELS = {"decide": "Agent decision", "pass": "Closest approach", "update": "Fresh tracking arrives",
-              "burn": "Burn", "start": "Start"}
-
-    def _trigger_event(self, trig):
-        kind, key = trig[1], trig[2]
-        if kind == "update":
-            u = self.sc["tracking_updates"][int(key)]
-            return self._key(u["fleet_sat"], u["norad_cat_id"])
-        return key if key in self.events else None
-
-    def coming_up(self):
-        """What the next trigger is, in words, for the banner."""
-        nt = next((x for x in self.triggers() if x[0] > self.t), None)
-        if nt is None:
-            return None
-        k = self._trigger_event(nt)
-        e = self.events.get(k) if k else None
-        return {"kind": nt[1], "label": self.LABELS.get(nt[1], nt[1]), "at": fmt(self.at(nt[0])),
-                "in": span(nt[0] - self.t), "in_s": nt[0] - self.t, "event": k,
-                "what": self._describe(e) if e else ""}
-
-    def _auto_focus(self):
-        """The screen follows the story: while the agent works, its approach; otherwise, once the focused
-        approach is well past, the approach the next trigger is about."""
-        if self.waiting:
-            self.focus = self.waiting["event"]
-            return
-        if self.manual_focus:
-            return
-        f = self.events.get(self.focus)
-        if f is not None and 0 <= (self.now() - f["tca"]).total_seconds() <= 120:
-            return                               # it has just passed: leave it up for a moment
-        nxt = next((self._trigger_event(x) for x in self.triggers() if x[0] > self.t and self._trigger_event(x)), None)
-        if nxt:
-            self.focus = nxt
