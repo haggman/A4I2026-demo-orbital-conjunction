@@ -1,8 +1,7 @@
-Agents for Impact 2026 — Kickoff Demo: Orbital Conjunction Screening
-Copyright 2026 ROI Training, Inc.
+Agents for Impact 2026—Kickoff Demo: Orbital Conjunction Screening
 
-This product includes software and documentation developed by ROI Training, Inc.
-for the Google Cloud "Agents for Impact" program.
+These materials were built for the Agents for Impact 2026 events. You are welcome to
+use them at any time, at an event or on your own, under the license below.
 
 Licensed under the Apache License, Version 2.0 (the "License"); you may not use
 these files except in compliance with the License. You may obtain a copy of the
@@ -24,8 +23,8 @@ ORBITAL DATA
 Orbital elements (OMM) and the satellite catalogue (SATCAT) originate with U.S.
 Space Command and are obtained via Space-Track.org and CelesTrak (celestrak.org).
 U.S. Space Command has provided express blanket approval for the transfer and
-redistribution of basic space situational awareness data — orbital elements,
-the satellite catalogue, and decay data — conditioned on appropriate citation.
+redistribution of basic space situational awareness data—orbital elements,
+the satellite catalogue, and decay data—conditioned on appropriate citation.
 This project uses only that category of data, and cites it as:
 
     Orbital data: U.S. Space Command, via Space-Track.org; satellite catalogue
