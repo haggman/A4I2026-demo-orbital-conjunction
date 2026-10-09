@@ -45,14 +45,16 @@ const blocks = [
 {
   id: "card", session: 1, tab: "GitHub · the demo repo", mins: 0.5,
   title: "The challenge: which of these warnings is real?",
-  needs: "README at the top: the title and \"Our satellites are made up. Everything they could hit is real.\"",
+  needs: "README at the top: the title and the \"This one has been solved for you\" box.",
   steps: [
     { tag: "SAY", text: "A sixth challenge, built exactly the way you'll build yours today, and taken all the way to the end." },
-    { tag: "DO", text: "Point at the one-line problem: a small constellation, 32,000 tracked objects, warnings that never stop." },
+    { tag: "DO", text: "Point at the box's table: the five build-path steps, each with the folder that solves it." },
+    { tag: "DO", text: "Scroll to Why this one matters: a small constellation, 32,000 tracked objects, warnings that never stop." },
   ],
   why: "Every team starts at the same place: a person, a decision, a deadline. This one is finished, so they can see where the day ends.",
   say: ["You operate twelve small Earth-observation satellites. About 32,000 tracked objects share their sky, the warnings never stop, and nearly all of them are noise. Which ones are real, and what do you do about them?",
-        "It's built the way your challenge is built: load the data, build an agent, give it one thing only your challenge has, deploy it, show it. I'll walk you through each step in a minute or two."],
+        "It's built the way your challenge is built: load the data, build an agent, give it one thing only your challenge has, deploy it, show it. I'll walk you through each step in a minute or two.",
+        "It's all in this repo, and the box at the top tells you where each piece lives. Read your own challenge first; come back here when you want to see what the end looks like."],
 },
 // ---------------------------------------------------------------------------------------------------------------- 2
 {

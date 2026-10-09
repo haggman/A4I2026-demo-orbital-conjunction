@@ -83,7 +83,7 @@ Stop both web apps afterwards with: bash scripts/start_demo.sh --stop
 
 ~0.5 min
 
-**NEEDS** README at the top: the title and "Our satellites are made up. Everything they could hit is real."
+**NEEDS** README at the top: the title and the "This one has been solved for you" box.
 
 **SAY**
 
@@ -91,7 +91,11 @@ A sixth challenge, built exactly the way you'll build yours today, and taken all
 
 **DO**
 
-Point at the one-line problem: a small constellation, 32,000 tracked objects, warnings that never stop.
+Point at the box's table: the five build-path steps, each with the folder that solves it.
+
+**DO**
+
+Scroll to Why this one matters: a small constellation, 32,000 tracked objects, warnings that never stop.
 
 ---
 

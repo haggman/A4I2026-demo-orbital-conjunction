@@ -124,7 +124,9 @@ bash scripts/start_demo.sh
 
 > It's built the way your challenge is built: load the data, build an agent, give it one thing only your challenge has, deploy it, show it. I'll walk you through each step in a minute or two.
 
-**Needs** README at the top: the title and "Our satellites are made up. Everything they could hit is real."
+> It's all in this repo, and the box at the top tells you where each piece lives. Read your own challenge first; come back here when you want to see what the end looks like.
+
+**Needs** README at the top: the title and the "This one has been solved for you" box.
 
 **SAY**
 
@@ -132,7 +134,11 @@ A sixth challenge, built exactly the way you'll build yours today, and taken all
 
 **DO**
 
-Point at the one-line problem: a small constellation, 32,000 tracked objects, warnings that never stop.
+Point at the box's table: the five build-path steps, each with the folder that solves it.
+
+**DO**
+
+Scroll to Why this one matters: a small constellation, 32,000 tracked objects, warnings that never stop.
 
 ### 2. Load & Explore: load it, distrust it, validate it
 
