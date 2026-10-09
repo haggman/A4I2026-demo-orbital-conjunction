@@ -1,0 +1,159 @@
+{
+ "made_utc": "2026-10-09T16:37:26+00:00",
+ "model": "gemini-3.8-flash",
+ "turns": [
+  {
+   "kind": "alert",
+   "text": "Recommend MANEUVER at 04:00 UTC. Tracking is fresh (2.55 days old at TCA) and debris cannot move.\n\n- 04:00:00 UTC burn: 0.0181 m/s prograde achieves 3036.3 m miss (worst-case Pc 9.98e-07), costing 1.54 days of mission life.\n- 12:00:00 UTC burn: 0.0343 m/s prograde achieves 3034.7 m miss (worst-case Pc 9.99e-07), costing 2.92 days of mission life.\n\nCost assumes Cymbal Orbital's fictional budget of 30 m/s over 7 years. Burning at 04:00 UTC clears the 1.0e-06 worst-case Pc threshold while saving 1.38 days of mission life compared to waiting. Assessment logged.",
+   "assessment": {
+    "title": "Conjunction Assessment & Maneuver Recommendation",
+    "as_of_utc": "2026-09-25T02:16:10Z",
+    "operator": "Cymbal Orbital (fictional)",
+    "elements_source": "snapshot",
+    "event": {
+     "our_satellite": "CYMBAL-04",
+     "object": "FENGYUN 1C DEB",
+     "norad_cat_id": 31178,
+     "object_type": "DEB",
+     "parent_event": "2007 Chinese anti-satellite test",
+     "closest_approach_utc": "2026-09-25T20:16:10+00:00",
+     "hours_from_now": 18.0,
+     "miss_m": 301.1,
+     "radial_m": 35.5,
+     "in_track_m": 257.1,
+     "cross_track_m": -152.6,
+     "relative_speed_km_s": 7.49
+    },
+    "risk": {
+     "worst_case_pc": 0.00010145512521438388,
+     "pc_if_sigma_200m": 0.00010063194425686059,
+     "pc_if_sigma_1km": 1.1946080767362019e-05,
+     "elements_days_old_at_tca": 2.55,
+     "elements_stale": false
+    },
+    "recommendation": "MANEUVER",
+    "rationale": "The approach exceeds our escalation threshold with fresh tracking on unmaneuverable debris. Executing the 04:00 UTC prograde burn clears the conjunction below 1.0e-6 worst-case probability. Burning early saves nearly half the propellant compared to waiting for the 12:00 UTC window.",
+    "assumptions": [
+     "Hard-body radius 5 m (both objects together).",
+     "No covariance is published with public elements: the worst case is taken over every isotropic uncertainty.",
+     "'Clear' means worst-case probability below 1e-06, a miss of about 3,033 m.",
+     "Cymbal Orbital's budget: 30 m/s over 7 years (fictional)."
+    ],
+    "cannot_see": [
+     "Objects the tracking network has not updated in 30 days are not in the catalogue we screened.",
+     "Public mean elements carry position errors that can run to kilometres, growing with their age.",
+     "A real operator would request a conjunction data message, with covariance, before committing propellant."
+    ],
+    "source": "Orbital data: U.S. Space Command (USSPACECOM), via Space-Track.org; satellite catalogue via CelesTrak (celestrak.org).\nRedistributed under USSPACECOM's express blanket approval for basic SSA data (TLEs/OMMs, SATCAT, decay data),\nwhich is conditioned on appropriate citation. No warranty of accuracy or completeness.\nPulled 2026-09-25T01:38:18+00:00 (GP) and 2026-09-25T01:38:46+00:00 (SATCAT).",
+    "maneuver": {
+     "burn_utc": "2026-09-25T04:00:00+00:00",
+     "delta_v_m_s": 0.0181,
+     "direction": "prograde",
+     "miss_after_m": 3036.3,
+     "worst_case_pc_after": 9.975993732309168e-07,
+     "cost_days_of_mission_life": 1.54,
+     "cost_pct_of_budget": 0.06
+    },
+    "markdown": "## Conjunction Assessment & Maneuver Recommendation\n*As of 2026-09-25T02:16:10Z \u00b7 Cymbal Orbital (fictional)*\n\n**CYMBAL-04** meets **FENGYUN 1C DEB** (DEB, catalogue 31178, from the 2007 Chinese anti-satellite test)\nat **2026-09-25T20:16:10+00:00**, 18.0 h from now: **301.1 m** at 7.49 km/s (radial 36 \u00b7 in-track 257 \u00b7 cross-track -153 m).\n\n**Risk.** Worst case 1.0e-04; if the 1-sigma uncertainty is 200 m, 1.0e-04; if 1 km, 1.2e-05. The object's elements will be 2.55 days old.\n\n**Recommendation: MANEUVER.** The approach exceeds our escalation threshold with fresh tracking on unmaneuverable debris. Executing the 04:00 UTC prograde burn clears the conjunction below 1.0e-6 worst-case probability. Burning early saves nearly half the propellant compared to waiting for the 12:00 UTC window.\n\n**Maneuver.** 0.0181 m/s prograde at 2026-09-25T04:00:00+00:00 \u2192 miss 3,036 m, worst case 1.0e-06. **Cost: 1.54 days of mission life** (0.06% of the lifetime budget).\n\n**Assumptions.** Hard-body radius 5 m (both objects together). No covariance is published with public elements: the worst case is taken over every isotropic uncertainty. 'Clear' means worst-case probability below 1e-06, a miss of about 3,033 m. Cymbal Orbital's budget: 30 m/s over 7 years (fictional).\n\n**What we cannot see.** Objects the tracking network has not updated in 30 days are not in the catalogue we screened. Public mean elements carry position errors that can run to kilometres, growing with their age. A real operator would request a conjunction data message, with covariance, before committing propellant.\n\n*Orbital data: U.S. Space Command (USSPACECOM), via Space-Track.org; satellite catalogue via CelesTrak (celestrak.org).\nRedistributed under USSPACECOM's express blanket approval for basic SSA data (TLEs/OMMs, SATCAT, decay data),\nwhich is conditioned on appropriate citation. No warranty of accuracy or completeness.\nPulled 2026-09-25T01:38:18+00:00 (GP) and 2026-09-25T01:38:46+00:00 (SATCAT).*",
+    "fleet_sat": "CYMBAL-04",
+    "norad_cat_id": 31178
+   },
+   "steps": [
+    {
+     "t": 2.6,
+     "step": "assess_conjunction(CYMBAL-04, 31178)"
+    },
+    {
+     "t": 12.2,
+     "step": "run_in_sandbox: orbital what-ifs in the Agent Runtime sandbox"
+    },
+    {
+     "t": 15.6,
+     "step": "maneuver_cost(0.0181 m/s)"
+    },
+    {
+     "t": 17.6,
+     "step": "maneuver_cost(0.0343 m/s)"
+    },
+    {
+     "t": 20.1,
+     "step": "build_assessment: MANEUVER"
+    }
+   ],
+   "seconds": 23.3,
+   "error": null,
+   "brief": "WATCHER ALERT. Sim time now: Fri 25 Sep 02:16:10 UTC.\nCYMBAL-04 vs FENGYUN 1C DEB (31178): closest approach Fri 25 Sep 20:16:10 UTC, 18.0 h from now.\nScreened miss 301.1 m, worst-case Pc 1.01e-04 (ESCALATE); the object's elements will be 2.55 days old at closest approach (fresh).\nCommand windows for a burn: Fri 25 Sep 04:00:00 UTC and Fri 25 Sep 12:00:00 UTC.\nAssess it with assess_conjunction; size the smallest prograde burn that clears it at each command window in ONE run_in_sandbox call; cost each with maneuver_cost; recommend one; and finish with build_assessment. Keep your reply under 120 words.",
+   "sim_now_utc": "2026-09-25T02:16:10Z",
+   "key": "CYMBAL-04|31178|20260925T2016",
+   "why": "decide",
+   "card_title": "Decision needed: CYMBAL-04 vs FENGYUN 1C DEB (31178)"
+  },
+  {
+   "kind": "alert",
+   "text": "Recommend NO ACTION. No burn is needed.\n\nFresh tracking updates the miss to 3,700.0 m (worst-case Pc 6.72e-07; assumed 1 km sigma Pc 1.33e-08). Because the worst-case probability is now below our 1.0e-06 clearance threshold, the conjunction is clear and drops to NOISE. Assessment logged.",
+   "assessment": {
+    "title": "Conjunction Assessment & Maneuver Recommendation",
+    "as_of_utc": "2026-09-29T06:00:00Z",
+    "operator": "Cymbal Orbital (fictional)",
+    "elements_source": "fresh tracking, epoch 2026-09-29T04:00:00.000000 (supersedes the snapshot's row)",
+    "event": {
+     "our_satellite": "CYMBAL-11",
+     "object": "SL-3 R/B",
+     "norad_cat_id": 8520,
+     "object_type": "R/B",
+     "parent_event": null,
+     "closest_approach_utc": "2026-10-01T17:45:00+00:00",
+     "hours_from_now": 59.75,
+     "miss_m": 3700.0,
+     "radial_m": 346.9,
+     "in_track_m": -1817.4,
+     "cross_track_m": -3204.2,
+     "relative_speed_km_s": 12.85
+    },
+    "risk": {
+     "worst_case_pc": 6.718032161582141e-07,
+     "pc_if_sigma_200m": 1.5003991380536818e-78,
+     "pc_if_sigma_1km": 1.3309577958349007e-08,
+     "elements_days_old_at_tca": 2.57,
+     "elements_stale": false
+    },
+    "recommendation": "NO ACTION",
+    "rationale": "Fresh tracking updates the miss to 3,700.0 m with a worst-case Pc of 6.72e-07. Because the event is already clear under our 1.0e-06 threshold, no burn is required. Triage drops to NOISE.",
+    "assumptions": [
+     "Hard-body radius 5 m (both objects together).",
+     "No covariance is published with public elements: the worst case is taken over every isotropic uncertainty.",
+     "'Clear' means worst-case probability below 1e-06, a miss of about 3,033 m.",
+     "Cymbal Orbital's budget: 30 m/s over 7 years (fictional)."
+    ],
+    "cannot_see": [
+     "Objects the tracking network has not updated in 30 days are not in the catalogue we screened.",
+     "Public mean elements carry position errors that can run to kilometres, growing with their age.",
+     "A real operator would request a conjunction data message, with covariance, before committing propellant."
+    ],
+    "source": "Orbital data: U.S. Space Command (USSPACECOM), via Space-Track.org; satellite catalogue via CelesTrak (celestrak.org).\nRedistributed under USSPACECOM's express blanket approval for basic SSA data (TLEs/OMMs, SATCAT, decay data),\nwhich is conditioned on appropriate citation. No warranty of accuracy or completeness.\nPulled 2026-09-25T01:38:18+00:00 (GP) and 2026-09-25T01:38:46+00:00 (SATCAT).",
+    "markdown": "## Conjunction Assessment & Maneuver Recommendation\n*As of 2026-09-29T06:00:00Z \u00b7 Cymbal Orbital (fictional)*\n\n**CYMBAL-11** meets **SL-3 R/B** (R/B, catalogue 8520)\nat **2026-10-01T17:45:00+00:00**, 59.75 h from now: **3,700.0 m** at 12.85 km/s (radial 347 \u00b7 in-track -1,817 \u00b7 cross-track -3,204 m).\n\n**Risk.** Worst case 6.7e-07; if the 1-sigma uncertainty is 200 m, 1.5e-78; if 1 km, 1.3e-08. The object's elements will be 2.57 days old. *Elements: fresh tracking, epoch 2026-09-29T04:00:00.000000 (supersedes the snapshot's row).*\n\n**Recommendation: NO ACTION.** Fresh tracking updates the miss to 3,700.0 m with a worst-case Pc of 6.72e-07. Because the event is already clear under our 1.0e-06 threshold, no burn is required. Triage drops to NOISE.\n\n**Assumptions.** Hard-body radius 5 m (both objects together). No covariance is published with public elements: the worst case is taken over every isotropic uncertainty. 'Clear' means worst-case probability below 1e-06, a miss of about 3,033 m. Cymbal Orbital's budget: 30 m/s over 7 years (fictional).\n\n**What we cannot see.** Objects the tracking network has not updated in 30 days are not in the catalogue we screened. Public mean elements carry position errors that can run to kilometres, growing with their age. A real operator would request a conjunction data message, with covariance, before committing propellant.\n\n*Orbital data: U.S. Space Command (USSPACECOM), via Space-Track.org; satellite catalogue via CelesTrak (celestrak.org).\nRedistributed under USSPACECOM's express blanket approval for basic SSA data (TLEs/OMMs, SATCAT, decay data),\nwhich is conditioned on appropriate citation. No warranty of accuracy or completeness.\nPulled 2026-09-25T01:38:18+00:00 (GP) and 2026-09-25T01:38:46+00:00 (SATCAT).*",
+    "fleet_sat": "CYMBAL-11",
+    "norad_cat_id": 8520
+   },
+   "steps": [
+    {
+     "t": 2.4,
+     "step": "assess_conjunction(CYMBAL-11, 8520)"
+    },
+    {
+     "t": 9.3,
+     "step": "build_assessment: NO ACTION"
+    }
+   ],
+   "seconds": 12.5,
+   "error": null,
+   "brief": "WATCHER ALERT. Sim time now: Tue 29 Sep 06:00:00 UTC.\nFresh tracking for SL-3 R/B (8520) has arrived (epoch Tue 29 Sep 04:00:00 UTC). It is a SIMULATED update for this demo; it supersedes the snapshot's row for this object, and assess_conjunction will use it.\nThe watcher's recompute for CYMBAL-11: miss 420.7 m \u2192 3,700.0 m, worst-case Pc 5.20e-05 \u2192 6.72e-07, closest approach Thu 1 Oct 17:45:00 UTC.\nEarlier the tracking was stale, so fresh tracking was requested instead of a burn. Re-assess with assess_conjunction, say whether any burn is still needed, and finish with build_assessment. Keep your reply under 100 words.",
+   "sim_now_utc": "2026-09-29T06:00:00Z",
+   "key": "CYMBAL-11|8520|20261001T1745",
+   "why": "update",
+   "card_title": "Re-assess on fresh tracking: CYMBAL-11 vs SL-3 R/B (8520)"
+  }
+ ],
+ "kept_from": "run-20261009T163651Z.json",
+ "about": "A real run of the live agent, recorded by the console and kept by console/keep_recording.py. The console's replay mode plays it back at the same sim moments, with the same steps."
+}

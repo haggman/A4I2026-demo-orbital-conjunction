@@ -38,43 +38,7 @@ Once per Google Cloud project. A new Google Skills lab is a new project: start h
 
 ---
 
-## BEFORE THE SHOW · 2 · THE REHEARSAL RECORDING
-
-**CLOUD SHELL · skip this page if console/recordings/rehearsal.json is already in the repo**
-
-```text
-source scripts/activate.sh
-python console/data.py
-uvicorn console.app:app --port 8080
-```
-
-→ *Web Preview ▸ Change port ▸ 8080. Header says LIVE AGENT.*
-
-**IN THE CONSOLE · live Gemini**
-
-Skip to next until the CYMBAL-04 card ▸ wait for YOUR CALL ▸ Approve  
-Skip to next until Tuesday's card ▸ wait for YOUR CALL ▸ Approve
-
-→ *CYMBAL-04: MANEUVER at 04:00. Tuesday: no burn.*
-
-**CLOUD SHELL · stop uvicorn first (Ctrl+C in its terminal)**
-
-```text
-python console/keep_recording.py
-```
-
-→ *Kept run-… → console/recordings/rehearsal.json · replayed the week twice: identical. If it says NOT KEPT, it says why: rehearse again.*
-
-**KEEP IT**
-
-Commit and push console/recordings/rehearsal.json  
-(or ⋯ More ▸ Download it and commit it from your Mac)
-
-The console replays this run in the show, so it behaves the same every time. Once it's committed, every later project reuses it.
-
----
-
-## BEFORE THE SHOW · 3 · MORNING OF
+## BEFORE THE SHOW · 2 · MORNING OF
 
 **CLOUD SHELL · repo root · the start block**
 
@@ -95,7 +59,7 @@ Notebook outputs still there? If the runtime was recycled: Runtime ▸ Run all (
 
 ---
 
-## BEFORE THE SHOW · 4 · OPEN THE FIVE TABS
+## BEFORE THE SHOW · 3 · OPEN THE FIVE TABS
 
 **IN THIS ORDER, LEFT TO RIGHT**
 
