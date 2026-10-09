@@ -172,6 +172,8 @@ class Sim:
         at 1 min/s. If we are already
         inside that lead-in, go on to the thing after it. Nothing is skipped over: every trigger on the way
         fires in order, and a skip stops early at one that wakes the agent."""
+        if self.waiting:                         # the agent is working or waiting for Approve / Hold: time stays put
+            return None
         featured = set(self.moments.values()) | set(self.burns)
         # the story's passes get a 20-second run-in at 1x (long enough to watch the range fall, short enough for a
         # ten-minute demo); the other watch-list passes a quick 10 seconds

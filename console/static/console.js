@@ -45,6 +45,7 @@ function drawHeader() {
   $("next").textContent = S.waiting ? "clock paused" : S.playing ? `running at ${S.speeds[S.speed_i].label}` : "paused: press ▶ or Skip to next";
   $("play").textContent = S.playing ? "⏸" : "▶";
   $("play").disabled = !!S.waiting;
+  $("skip").disabled = !!S.waiting;                   // no skipping while the agent works or waits for you
   $("speeds").innerHTML = S.speeds.map((s, i) => `<button class="${i === S.speed_i ? "on" : ""}" data-i="${i}">${esc(s.label)}</button>`).join("");
   $("speeds").querySelectorAll("button").forEach((b) => (b.onclick = () => control("speed", +b.dataset.i)));
   const m = $("mode");
