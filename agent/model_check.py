@@ -85,7 +85,7 @@ def main():
             print(f"  {label:44}      —       —        —   {bad:>5}")
     usable = [r for r in rows if r[3] and r[4] == 0] or [r for r in rows if r[3]]
     if not usable:
-        print("\nNothing answered. Check the model IDs, the project's Vertex AI access, and try again in a minute.")
+        print("\nNothing answered. Check the model IDs, the project's Gemini platform access, and try again in a minute.")
         sys.exit(1)
     best = min(usable, key=lambda r: statistics.median(r[3]))
     current = [r for r in usable if r[1] == config.MODEL and r[2] == config.SERVICE_TIER]

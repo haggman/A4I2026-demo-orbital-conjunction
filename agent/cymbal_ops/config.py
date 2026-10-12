@@ -52,7 +52,7 @@ MODEL_LOCATION = os.environ.get("A4I_MODEL_LOCATION", "global")
 # agent's routing. Empty means "send no thinking setting", for a model that does not accept one.
 THINKING_LEVEL = os.environ.get("A4I_THINKING_LEVEL", "low").strip().lower()
 
-# Which queue the requests join. Empty = standard pay-as-you-go. "priority" asks for Vertex AI's Priority PayGo,
+# Which queue the requests join. Empty = standard pay-as-you-go. "priority" asks for Gemini platform's Priority PayGo,
 # which Google documents as priority processing at a premium per-token price; "flex" is the cheaper, slower one.
 # Untested with this agent: agent/model_check.py tells you whether the endpoint accepts it and whether it helps.
 SERVICE_TIER = os.environ.get("A4I_SERVICE_TIER", "").strip().lower()
