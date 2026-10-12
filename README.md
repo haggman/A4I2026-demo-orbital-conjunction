@@ -16,8 +16,8 @@
 >
 > | Build-path step | Our solution | Start with |
 > |---|---|---|
-> | **Load & Explore** | A notebook that loads the public orbital catalogue into BigQuery, gets the obvious answer wrong first, and screens our fleet against the sky | [`notebooks/demo_01_load_explore.ipynb`](notebooks/demo_01_load_explore.ipynb) |
-> | **Build** | One ADK agent on Gemini, reading BigQuery through Google's managed MCP server, plus three tools we wrote | [`agent/README.md`](agent/README.md) |
+> | **Load & Explore** | A notebook that loads the public orbital catalog into BigQuery, gets the obvious answer wrong first, and screens our fleet against the sky | [`notebooks/demo_01_load_explore.ipynb`](notebooks/demo_01_load_explore.ipynb) |
+> | **Build** | One ADK agent on Gemini, reading BigQuery through Google's managed MCP server, plus four tools we wrote | [`agent/README.md`](agent/README.md) |
 > | **Differentiate** | Orbital what-ifs run in the Agent Runtime code sandbox, not in the agent's process | [`agent/cymbal_ops/tools.py`](agent/cymbal_ops/tools.py) · [`orbit_whatif.py`](agent/cymbal_ops/sandbox_files/orbit_whatif.py) |
 > | **Deploy** | The same agent on Cloud Run, authentication required, one command | [`agent/deploy.sh`](agent/deploy.sh) |
 > | **Show** | A flight dynamics console: plain code watches, the agent decides, a human approves | [`console/README.md`](console/README.md) |
@@ -50,13 +50,13 @@
 
 ## Why this one matters
 
-There are about 32,000 objects in orbit with published positions. A few thousand are working satellites.
+There are about 32,500 objects in orbit with published positions. A few thousand are working satellites.
 The rest are dead satellites, spent rocket stages, and fragments: pieces of things that broke apart, some
 of them on purpose.
 
 If you fly satellites, every one of those objects is a warning waiting to happen. Your operations team gets
 a steady stream of close-approach alerts, around the clock, and **nearly all of them are noise.** The
-object will pass kilometres away, or the tracking is too old to mean anything, or it will be over before
+object will pass kilometers away, or the tracking is too old to mean anything, or it will be over before
 anyone could act.
 
 A few are not. And here is the trade that makes this hard rather than a matter of caution: **moving a
@@ -83,7 +83,7 @@ to build the thing that helps them decide well, and says plainly when it can't.
 |---|---|---|
 | **Everyone, together** | [The four things](#the-four-things-youre-working-with) · [Three tracks](#three-tracks-one-architecture) · [What you're building](#what-youre-building) | — |
 | **Team lead** | [Step 0](#step-0organize-your-team) · [How you'll be judged](#how-youll-be-judged) | [What will set yours apart](#what-will-set-yours-apart) |
-| **Data lane** | [Step 4, load the data](#step-4load-the-data) · [What you'll have](#what-youll-have) | [The data, and why we chose it](#the-data-and-why-we-chose-it) |
+| **Data lane** | [Step 2, load the data](#step-2load-the-data) · [What you'll have](#what-youll-have) | [The data, and why we chose it](#the-data-and-why-we-chose-it) |
 | **Agent lane** | [The technology](#the-technology-youll-use), especially the differentiator | [`agent/README.md`](agent/README.md) |
 | **Front end lane** | [Front end lane](#front-end-lane2-people) | [Your output artifact](#your-output-artifact-the-conjunction-assessment) |
 | **Story lane** | [Why this one matters](#why-this-one-matters) · [The honest numbers](#the-honest-numbers) | [What we cannot see](#what-the-data-cannot-do) |
@@ -243,7 +243,7 @@ watch for a shift, not a chat window; if you build your own, show the decision, 
 
 > **How we did it.** A console: time runs over the week, a watcher posts cards, the agent's card waits for
 > Approve or Hold. And because conference wifi is the most likely thing to fail all day, it can replay a
-> recorded run of the real agent, labelled REPLAY. See [`console/README.md`](console/README.md).
+> recorded run of the real agent, labeled REPLAY. See [`console/README.md`](console/README.md).
 
 #### Story lane—1 to 2 people, starting at minute zero
 
@@ -294,7 +294,7 @@ Five tables in your project, in a dataset called `a4i_orbit`:
 | Table | What it is |
 |---|---|
 | `catalog` | Every tracked object with current elements: about 32,500 rows, with perigee, apogee, element age, and what each object is |
-| `satcat` | Every object ever catalogued, including the ones that have re-entered |
+| `satcat` | Every object ever cataloged, including the ones that have re-entered |
 | `fleet` | Cymbal Orbital's twelve fictional satellites, in the same shape as `catalog` |
 | `conjunctions` | The screen's output: every approach under 10 km over seven days, with miss distance, its components, risk and triage |
 | `snapshot_info` | Which snapshot, which moment, which assumptions |
@@ -303,18 +303,18 @@ Five tables in your project, in a dataset called `a4i_orbit`:
 
 ## The data, and why we chose it
 
-Every tracked object is catalogued by **U.S. Space Command**, which publishes its elements through
+Every tracked object is cataloged by **U.S. Space Command**, which publishes its elements through
 [Space-Track.org](https://www.space-track.org) (free, with an account) and, redistributed with no account,
-through [CelesTrak](https://celestrak.org). We pulled the full catalogue from Space-Track once, because only it
+through [CelesTrak](https://celestrak.org). We pulled the full catalog from Space-Track once, because only it
 reaches the dead satellites in bulk, and **dead satellites matter most: they cannot get out of the way.** What
-each object *is* comes from CelesTrak's satellite catalogue.
+each object *is* comes from CelesTrak's satellite catalog.
 
 The snapshot is **pinned** (`20260925T0137Z`), so every city sees the same numbers.
 
 **The rights, and the one obligation.** U.S. Space Command gives express blanket approval to redistribute
 basic orbital data, conditioned on citation. So, everywhere the data appears:
 
-> *Orbital data: U.S. Space Command, via Space-Track.org; satellite catalogue via CelesTrak (celestrak.org).*
+> *Orbital data: U.S. Space Command, via Space-Track.org; satellite catalog via CelesTrak (celestrak.org).*
 
 ### The hook you will hit in the first ten minutes
 
@@ -331,7 +331,7 @@ query. It's Kessler syndrome in one table.
 
 - **No covariance.** A real operator gets a statement of how uncertain each position is. We get a position.
   Every probability rests on a stated assumption.
-- **Mean elements are not measurements.** Their error grows with age and can run to kilometres, far larger
+- **Mean elements are not measurements.** Their error grows with age and can run to kilometers, far larger
   than a 300 m miss. A public-data screen is **triage**; a real operator asks for higher-accuracy tracking
   before maneuvering.
 - **Objects nobody has updated in 30 days are not in the pull at all**, about 2,100 of them. No news from
@@ -348,7 +348,7 @@ be nearly eight days old by then. The honest answer there is *ask for fresh trac
 a number we chose. That is why an honest system shows its assumptions next to its answer.
 
 > **How we did it.** The console's Tuesday is the one thing we **simulated**: fresh tracking for that rocket
-> stage, made from the snapshot's own elements and labelled SIMULATED wherever it appears. It moves the miss
+> stage, made from the snapshot's own elements and labeled SIMULATED wherever it appears. It moves the miss
 > to 3.7 km, and the agent says don't burn. [`console/README.md`](console/README.md) says exactly how it's made.
 
 ---
@@ -385,6 +385,7 @@ scripts/
   build_demo.sh                   The whole build, one command
   start_demo.sh                   Start the ADK web UI and the console (--stop to stop them)
   activate.sh                     The Python environment and settings, for any new terminal
+  adk_web.sh                      The ADK web UI, bound so Cloud Shell's Web Preview can reach it
 agent/                            The finished agent. Full, unlike yours (agent/README.md)
 console/                          The flight dynamics console: the Show step (console/README.md)
 run-of-show/                      How the kickoff demo is presented, and the instructor guide
@@ -418,5 +419,5 @@ see; and an agent that recommends *not* acting when the evidence says so.
 Ask a coach. To report a problem with the data or the notebook, run the **diagnostic cell** at the bottom of
 the notebook (Appendix B) and share everything it prints.
 
-*Orbital data: U.S. Space Command, via Space-Track.org; satellite catalogue via CelesTrak (celestrak.org).
+*Orbital data: U.S. Space Command, via Space-Track.org; satellite catalog via CelesTrak (celestrak.org).
 See `NOTICE`.*

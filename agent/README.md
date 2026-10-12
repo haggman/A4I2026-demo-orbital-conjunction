@@ -3,7 +3,7 @@
 **Unlike the five challenges, this folder holds a complete, working agent.** That is the point of a demo:
 it shows teams what the end of the path looks like.
 
-It is one ADK agent with three kinds of tool, plus a sandbox:
+It is one ADK agent with one managed MCP toolset, four tools of our own, and a sandbox:
 
 | Piece | What it is | Why it is there |
 |---|---|---|
@@ -34,9 +34,9 @@ belongs to an Agent Runtime instance either way.
 - **Gemini is steadier calling a tool than writing code into its reply.** With the executor, Gemini 3.8 Flash
   sometimes answered `MALFORMED_FUNCTION_CALL` or `UNEXPECTED_TOOL_CALL` where the code should have been:
   it tried to *call* something to run the code. So by default the code goes in as the argument to a function
-  tool, `run_in_sandbox(code)`, the path the model is most practised at. Same sandbox, same code, fewer surprises.
+  tool, `run_in_sandbox(code)`, the path the model is most practiced at. Same sandbox, same code, fewer surprises.
 
-How a burn is modelled, in `sandbox_files/orbit_whatif.py`: SGP4 stays the baseline for both objects, and we
+How a burn is modeled, in `sandbox_files/orbit_whatif.py`: SGP4 stays the baseline for both objects, and we
 integrate only the *difference* the burn makes (two-body + J2, once with the burn and once without). What the
 simple model gets wrong, it gets wrong in both runs, and it cancels.
 
