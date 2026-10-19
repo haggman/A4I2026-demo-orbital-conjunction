@@ -77,7 +77,7 @@ Notebook outputs still there? If the runtime was recycled: Runtime ▸ Run all (
 2  Colab Enterprise ▸ demo_01_load_explore.ipynb (from page 1)  
 3  The start block's 8000 link (click it in Cloud Shell): the ADK web UI, cymbal_ops picked ▸ new session  
 4  Google Cloud console ▸ Cloud Run ▸ cymbal-ops  
-5  The start block's 8080 link: the console
+5  The start block's 8080 link (click it in Cloud Shell): the console
 
 → *Tab 5: header says REPLAY, clock Fri 25 Sep 01:00:00 UTC, three watcher cards on the desk.*
 
