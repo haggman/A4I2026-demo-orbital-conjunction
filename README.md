@@ -83,7 +83,7 @@ to build the thing that helps them decide well, and says plainly when it can't.
 |---|---|---|
 | **Everyone, together** | [The four things](#the-four-things-youre-working-with) · [Three tracks](#three-tracks-one-architecture) · [What you're building](#what-youre-building) | — |
 | **Team lead** | [Step 0](#step-0organize-your-team) · [How you'll be judged](#how-youll-be-judged) | [What will set yours apart](#what-will-set-yours-apart) |
-| **Data lane** | [Step 2, load the data](#step-2load-the-data) · [What you'll have](#what-youll-have) | [The data, and why we chose it](#the-data-and-why-we-chose-it) |
+| **Data lane** | [Step 4, load the data](#step-4load-the-data) · [What you'll have](#what-youll-have) | [The data, and why we chose it](#the-data-and-why-we-chose-it) |
 | **Agent lane** | [The technology](#the-technology-youll-use), especially the differentiator | [`agent/README.md`](agent/README.md) |
 | **Front end lane** | [Front end lane](#front-end-lane2-people) | [Your output artifact](#your-output-artifact-the-conjunction-assessment) |
 | **Story lane** | [Why this one matters](#why-this-one-matters) · [The honest numbers](#the-honest-numbers) | [What we cannot see](#what-the-data-cannot-do) |
@@ -253,39 +253,121 @@ opposite answers: burn now while it's cheap, and don't burn on old tracking.
 > **How we did it.** [`run-of-show/`](run-of-show/) is our whole script: the plan, a teleprompter, a planning
 > guide and the instructor guide.
 
-### Step 1—Get the code into Cloud Shell
+### Step 1—Create the team repository
 
-In the Google Cloud console, open Cloud Shell with the **terminal icon (`>_`)** in the top right, then:
+> **Demo only.** This is how your team starts on your own challenge, and we walk through it here so you've
+> seen it once. You don't need a copy of *this* repo: to follow along, skip to Step 3 and clone ours.
+
+**Repo owner only.**
+
+1. At the top of your challenge's page on GitHub, click the green **Use this template** button → **Create a
+   new repository**. *(No button? Use **Fork** and tell a coach.)*
+2. Name it after your team, choose **Public**, click **Create repository**.
+3. **Settings → Collaborators** → add every teammate's GitHub username.
+4. Paste the repo URL where everyone can see it.
+
+### Step 2—Get into your Google Cloud project
+
+**Your facilitator will tell you how to access your project. Follow those instructions**—they vary by venue
+and they're the fastest path.
+
+**There is one project per team.** You all share it, which is the point—you can all see the same BigQuery
+tables. It also means you can overwrite each other. Agree on who creates what.
+
+You have Owner. You don't need to create a project, set up billing, or download a key file.
+
+### Step 3—Everyone: get into Cloud Shell
+
+**Cloud Shell is where you'll work.** It has `gcloud`, `bq`, Python, git and the Antigravity CLI already
+installed. Nothing to set up on your laptop, and no admin rights needed.
+
+1. In the Google Cloud console—the one your facilitator just got you into—click the **terminal icon (`>_`)
+   in the top right**. Use that icon rather than a bookmark or a typed address: it opens Cloud Shell attached
+   to *this* project, in *this* browser session.
+
+2. Clone your team's repository and move into it:
+
+   ```bash
+   git clone https://github.com/YOUR-TEAM/YOUR-REPO.git
+   cd YOUR-REPO
+   ```
+
+   *(Following along with the demo? Clone ours instead:)*
+
+   ```bash
+   git clone https://github.com/haggman/A4I2026-demo-orbital-conjunction.git
+   cd A4I2026-demo-orbital-conjunction
+   ```
+
+3. Open the repo in the editor:
+
+   ```bash
+   cloudshell workspace .
+   ```
+
+   That opens the folder as a workspace in the Cloud Shell Editor—the same thing as **File → Open Folder**
+   in VS Code. You get a file tree, a real editor, and a terminal in the same browser tab.
+
+#### One repo, one branch per lane
+
+Eight to ten people committing to `main` will collide. Nobody needs their own fork—just take a branch:
 
 ```bash
-git clone https://github.com/haggman/A4I2026-demo-orbital-conjunction.git
-cd A4I2026-demo-orbital-conjunction
+git checkout -b data        # or agent, frontend, story
 ```
 
-*(For your own challenge you'll use **Use this template** instead. This repo isn't one.)*
+Work on your lane's branch. Merge into `main` when you have something the other lanes need—the data lane's
+queries are the obvious example, and the agent lane's tools wrap them. Merging early and often beats one
+heroic merge at the end.
 
-### Step 2—Load the data
+Your `$HOME` directory persists between Cloud Shell sessions. Anything outside it does not, so keep your work
+in the cloned repo.
 
-1. In the Google Cloud console, search for **Colab Enterprise** and open it. Enable the APIs it asks for
-   (twice is normal).
-2. **My Notebooks** → **Import** → source **URL**, and paste:
+#### Strongly recommended: Antigravity, the IDE and the CLI
+
+Antigravity is Google's agentic coding environment, and it is already set up for you in two forms: an IDE
+that launches from a button in your Google Skills lab environment, and a CLI already installed in Cloud
+Shell. Neither is required, but every lane has tedious work a coding agent will happily absorb.
+
+```bash
+agy
+```
+
+Then talk to it in plain language: scaffold ADK boilerplate, draft BigQuery SQL against the tables you just
+loaded, or paste an error and ask what's wrong. `/diff` shows pending changes before you accept them.
+
+### Step 4—Load the data
+
+**Data lane's job.** One person runs it; nobody else waits.
+
+1. In the Google Cloud console, search for **Colab Enterprise** and open it.
+2. **You'll be asked to enable some APIs. Say yes.** Then the Colab Enterprise home page shows *another*
+   **Enable APIs** button at the top. Click that too. Two prompts is expected.
+3. **My Notebooks** → **Import** → source **URL**, and paste this:
 
    ```
    https://raw.githubusercontent.com/haggman/A4I2026-demo-orbital-conjunction/main/notebooks/demo_01_load_explore.ipynb
    ```
 
-3. Open it and **Runtime ▸ Run all**. About four minutes, most of it the seven-day screen. **Read the text
-   between the cells**: it is written so someone who runs nothing can follow every decision.
+   *(For your own challenge, the README gives your notebook's URL. If your team changes the notebook later,
+   open it on GitHub and click **Raw** for your copy's URL.)*
 
-**If the notebook won't run**, the headless fallback rebuilds the same tables in about a minute:
+4. Click **Import**, open the notebook, and **Runtime ▸ Run all**. About four minutes, most of it the
+   seven-day screen. **Read the text between the cells**: it is written so someone who runs nothing can
+   follow every decision.
+
+**If the notebook won't run**, the headless fallback rebuilds the same tables in about a minute. From the root
+of your cloned repo in Cloud Shell:
 
 ```bash
 bash scripts/load.sh              # the pinned snapshot
 bash scripts/load.sh --list       # snapshots with published tables
 ```
 
-**Or build everything at once:** `bash scripts/build_demo.sh` loads the data, builds the agent and its
-sandbox, tests it, and deploys it. Safe to run again.
+It's safe to run more than once: every table is replaced, not appended to.
+
+**Or build everything at once** (this demo only): `bash scripts/build_demo.sh` loads the data, builds the
+agent and its sandbox, tests it, and deploys it. Safe to run again.
 
 ### What you'll have
 
