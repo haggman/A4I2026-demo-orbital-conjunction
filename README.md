@@ -377,6 +377,7 @@ license).
 
 ```
 README.md                         this file
+CODE-TOUR.md                      Every file, and how the data, the agent and the console fit together
 notebooks/
   demo_01_load_explore.ipynb      Load & Explore. Run this first
   demo_90_stage_catalog.ipynb     Maintainers only: refresh the snapshot from Space-Track
@@ -392,6 +393,9 @@ run-of-show/                      How the kickoff demo is presented, and the ins
 data/                             No orbital data is committed; see data/README.md
 demo.env                          Every setting you might change: model, timeouts, dataset
 ```
+
+For what each code file does, and a walk through one question and the console's week, see
+[CODE-TOUR.md](CODE-TOUR.md).
 
 ---
 
